@@ -21,7 +21,8 @@
             pointer-events: none;
         }
 
-        .grid path, .grid line {
+        .grid path,
+        .grid line {
             stroke: lightgrey;
             shape-rendering: crispEdges;
         }
@@ -38,6 +39,7 @@
 
 <body>
     <div id="ftrent"></div>
+    <button id="reset-btn">reset</button>
 
     <script src="https://d3js.org/d3.v4.js"></script>
     <script>
@@ -48,11 +50,12 @@
                 width: 980,
                 height: 500,
                 getX: (d) => parseInt(d.saleable_area),
-                getY: (d) => parseInt(d.rent)
+                getY: (d) => parseInt(d.rent),
+                resetBtnSelector: '#reset-btn',
             });
         })
 
-        function scatterPlot({ selector, width, height, data, getX = (d) => d[0], getY = (d) => d[1] }) {
+        function scatterPlot({ selector, width, height, data, getX = (d) => d[0], getY = (d) => d[1], resetBtnSelector }) {
             var margin = { top: 10, right: 30, bottom: 30, left: 60 };
             width -= (margin.left + margin.right);
             height -= (margin.top + margin.bottom);
@@ -64,10 +67,18 @@
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom);
 
+            var zoom = d3.zoom().on("zoom", zoomed);
+
             var g = svg.append("g")
                 .attr("transform",
                     "translate(" + margin.left + "," + margin.top + ")")
-                .call(d3.zoom().on("zoom", zoomed));
+                .call(zoom);
+
+            if (resetBtnSelector) {
+                d3.select(resetBtnSelector).on('click', function () {
+                    zoom.transform(g, d3.zoomIdentity);
+                });
+            }
 
             g.append("rect")
                 .attr("width", width)
