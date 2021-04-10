@@ -38,8 +38,7 @@
             var x = d3.scaleLinear()
                 .domain([
                     0,
-                    1002,
-                    // d3.max(data, d => parseInt(d.saleable_area)),
+                    d3.max(data, d => parseInt(d.saleable_area)) * 1.1,
                 ])
                 .range([0, width]);
             var xAxis = SVG.append("g")
@@ -50,8 +49,7 @@
             var y = d3.scaleLinear()
                 .domain([
                     0,
-                    38000,
-                    // d3.max(data, d => parseFloat(d.rent)),
+                    d3.max(data, d => parseFloat(d.rent)) * 1.1,
                 ])
                 .range([height, 0]);
             var yAxis = SVG.append("g")
