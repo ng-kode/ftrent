@@ -25,24 +25,26 @@
 </head>
 
 <body>
-    <!-- <script src="//d3js.org/d3.v3.min.js"></script> -->
+    <div id="ftrent"></div>
+
     <script src="https://d3js.org/d3.v4.js"></script>
     <script>
-        // var data = d3.range(20).map(function () { return [Math.random() * 960, Math.random() * 500]; });
         d3.csv('/24_tokwawan_cleaned.csv', function (data) {
-            scatterPlot(data, d => parseInt(d.saleable_area), d => parseInt(d.rent));
+            scatterPlot({
+                selector: '#ftrent',
+                width: 960,
+                height: 500,
+                data,
+                getX: (d) => parseInt(d.saleable_area),
+                getY: (d) => parseInt(d.rent)
+            });
         })
 
-        function scatterPlot(data, getX = (d) => d[0], getY = (d) => d[1]) {
-            var width = self.frameElement ? 960 : innerWidth,
-                height = self.frameElement ? 500 : innerHeight;
-
-            // var color = d3.scale.category10();
-
+        function scatterPlot({selector, width, height, data, getX = (d) => d[0], getY = (d) => d[1]}) {
             var zoom = d3.zoom()
                 .on("zoom", zoomed);
 
-            var svg = d3.select("body")
+            var svg = d3.select(selector)
                 .on("touchstart", nozoom)
                 .on("touchmove", nozoom)
                 .append("svg")
@@ -76,11 +78,9 @@
             view.selectAll("circle")
                 .data(data)
                 .enter().append("circle")
-                // .attr("transform", function (d) { return "translate(" + d + ")"; })
                 .attr("cx", function (d) { return x(getX(d)); })
                 .attr("cy", function (d) { return y(getY(d)); })
                 .attr("r", 16)
-                // .style("fill", function (d, i) { return color(i); })
                 .style("fill", "#61a3a9")
                 .style("opacity", 0.5)
                 .on('click', function (d) {
@@ -90,7 +90,6 @@
             function zoomed() {
                 var transform = d3.event.transform;
                 view.attr('transform', "translate(" + transform.x + "," + transform.y + ") scale(" + transform.k + ")");
-                // view.attr("transform", "translate(" + d3.event.translate + ") scale(" + d3.event.scale + ")");
             }
 
             function clicked(d, i) {
