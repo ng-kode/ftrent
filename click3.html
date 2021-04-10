@@ -7,17 +7,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
-        html,
-        body {
-            height: 100%;
-            margin: 0;
-            overflow: hidden;
-        }
-
-        svg {
-            position: absolute;
-        }
-
         rect {
             fill: white;
         }
@@ -25,14 +14,24 @@
         .tooltip {
             position: absolute;
             text-align: center;
-            /* width: 60px;
-            height: 28px; */
             padding: 8px;
-            /* font: 12px sans-serif; */
             background: lightsteelblue;
             border: 0px;
             border-radius: 8px;
             pointer-events: none;
+        }
+
+        .grid path, .grid line {
+            stroke: lightgrey;
+            shape-rendering: crispEdges;
+        }
+
+        .grid path {
+            stroke-width: 0;
+        }
+
+        .grid line {
+            stroke-opacity: 0.7;
         }
     </style>
 </head>
@@ -46,24 +45,29 @@
             scatterPlot({
                 selector: '#ftrent',
                 data,
+                width: 980,
+                height: 500,
                 getX: (d) => parseInt(d.saleable_area),
                 getY: (d) => parseInt(d.rent)
             });
         })
 
-        function scatterPlot({ selector, width = innerWidth, height = innerHeight, data, getX = (d) => d[0], getY = (d) => d[1] }) {
-            var zoom = d3.zoom()
-                .on("zoom", zoomed);
+        function scatterPlot({ selector, width, height, data, getX = (d) => d[0], getY = (d) => d[1] }) {
+            var margin = { top: 10, right: 30, bottom: 30, left: 60 };
+            width -= (margin.left + margin.right);
+            height -= (margin.top + margin.bottom);
 
             var svg = d3.select(selector)
                 .on("touchstart", noZoom)
                 .on("touchmove", noZoom)
                 .append("svg")
-                .attr("width", width)
-                .attr("height", height);
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom);
 
             var g = svg.append("g")
-                .call(zoom);
+                .attr("transform",
+                    "translate(" + margin.left + "," + margin.top + ")")
+                .call(d3.zoom().on("zoom", zoomed));
 
             g.append("rect")
                 .attr("width", width)
@@ -76,15 +80,17 @@
             var x = d3.scaleLinear()
                 .domain([0, d3.max(data, getX) * 1.1])
                 .range([0, width]);
-            svg.append("g")
+            var xAxis = g.append("g")
+                .attr("class", "grid")
                 .attr("transform", "translate(0," + height + ")")
-                .call(d3.axisBottom(x));
+                .call(d3.axisBottom(x).ticks(5).tickSize(-height));
 
             var y = d3.scaleLinear()
                 .domain([0, d3.max(data, getY) * 1.1])
                 .range([height, 0]);
-            svg.append("g")
-                .call(d3.axisLeft(y));
+            var yAxis = g.append("g")
+                .attr("class", "grid")
+                .call(d3.axisLeft(y).ticks(5).tickSize(-width));
 
             var tooltip = d3.select("body").append("div")
                 .attr("class", "tooltip")
@@ -125,6 +131,11 @@
             function zoomed() {
                 var transform = d3.event.transform;
                 view.attr('transform', "translate(" + transform.x + "," + transform.y + ") scale(" + transform.k + ")");
+
+                var newX = transform.rescaleX(x);
+                var newY = d3.event.transform.rescaleY(y);
+                xAxis.call(d3.axisBottom(newX).ticks(5).tickSize(-height));
+                yAxis.call(d3.axisLeft(newY).ticks(5).tickSize(-width));
             }
 
             function clicked(d, i) {
