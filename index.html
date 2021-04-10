@@ -49,14 +49,14 @@
                 .attr("transform",
                     "translate(" + margin.left + "," + margin.top + ")");
 
-            window.tkw = data;
-            console.log('tkw', data);
+            const getX = d => parseInt(d.saleable_area);
+            const getY = d => parseInt(d.rent);
 
             // Add X axis
             var x = d3.scaleLinear()
                 .domain([
                     0,
-                    d3.max(data, d => parseInt(d.saleable_area)) * 1.1,
+                    d3.max(data, getX) * 1.1,
                 ])
                 .range([0, width]);
             var xAxis = SVG.append("g")
@@ -66,14 +66,14 @@
                     d3.axisBottom(x)
                         .ticks(5)
                         .tickSize(-height)
-                        // .tickFormat("")
+                    // .tickFormat("")
                 );
 
             // Add Y axis
             var y = d3.scaleLinear()
                 .domain([
                     0,
-                    d3.max(data, d => parseFloat(d.rent)) * 1.1,
+                    d3.max(data, getY) * 1.1,
                 ])
                 .range([height, 0]);
             var yAxis = SVG.append("g")
@@ -82,7 +82,7 @@
                     d3.axisLeft(y)
                         .ticks(5)
                         .tickSize(-width)
-                        // .tickFormat("")
+                    // .tickFormat("")
                 );
 
             // Add a clipPath: everything out of this area won't be drawn.
@@ -104,8 +104,8 @@
                 .data(data)
                 .enter()
                 .append("circle")
-                .attr("cx", function (d) { return x(parseInt(d.saleable_area)); })
-                .attr("cy", function (d) { return y(parseInt(d.rent)); })
+                .attr("cx", function (d) { return x(getX(d)); })
+                .attr("cy", function (d) { return y(getY(d)); })
                 .attr("r", 4)
                 .style("fill", "#61a3a9")
                 .style("opacity", 0.5)
@@ -140,12 +140,21 @@
                 // update circle position
                 scatter
                     .selectAll("circle")
-                    .attr('cx', function (d) { return newX(parseInt(d.saleable_area)) })
-                    .attr('cy', function (d) { return newY(parseInt(d.rent)) });
+                    .attr('cx', function (d) { return newX(getX(d)) })
+                    .attr('cy', function (d) { return newY(getY(d)) });
             }
 
             document.getElementById('reset-btn').addEventListener('click', function () {
                 zoom.transform(SVG, d3.zoomIdentity);
+
+                // This add an invisible rect on top of the chart area. This rect can recover pointer events: necessary to understand when the user zoom
+                SVG.append("rect")
+                    .attr("width", width)
+                    .attr("height", height)
+                    .style("fill", "none")
+                    .style("pointer-events", "all")
+                    .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+                    .call(zoom);
             })
         })
 
