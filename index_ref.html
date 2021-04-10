@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -9,10 +8,9 @@
     <!-- Load d3.js -->
     <script src="https://d3js.org/d3.v4.js"></script>
 </head>
-
 <body>
     <!-- Create a div where the circle will take place -->
-    <div id="ftrent"></div>
+    <div id="dataviz_axisZoom"></div>
     <button id="reset-btn">reset</button>
 
     <script>
@@ -22,7 +20,7 @@
             height = 400 - margin.top - margin.bottom;
 
         // append the SVG object to the body of the page
-        var SVG = d3.select("#ftrent")
+        var SVG = d3.select("#dataviz_axisZoom")
             .append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
@@ -31,16 +29,15 @@
                 "translate(" + margin.left + "," + margin.top + ")");
 
         d3.csv('/24_tokwawan_cleaned.csv', function (data) {
-            window.tkw = data;
             console.log('tkw', data);
+        })
+
+        //Read the data
+        d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/iris.csv", function (data) {
 
             // Add X axis
             var x = d3.scaleLinear()
-                .domain([
-                    0,
-                    1002,
-                    // d3.max(data, d => parseInt(d.saleable_area)),
-                ])
+                .domain([4, 8])
                 .range([0, width]);
             var xAxis = SVG.append("g")
                 .attr("transform", "translate(0," + height + ")")
@@ -48,11 +45,7 @@
 
             // Add Y axis
             var y = d3.scaleLinear()
-                .domain([
-                    0,
-                    38000,
-                    // d3.max(data, d => parseFloat(d.rent)),
-                ])
+                .domain([0, 9])
                 .range([height, 0]);
             var yAxis = SVG.append("g")
                 .call(d3.axisLeft(y));
@@ -76,9 +69,9 @@
                 .data(data)
                 .enter()
                 .append("circle")
-                .attr("cx", function (d) { return x(parseInt(d.saleable_area)); })
-                .attr("cy", function (d) { return y(parseInt(d.rent)); })
-                .attr("r", 4)
+                .attr("cx", function (d) { return x(d.Sepal_Length); })
+                .attr("cy", function (d) { return y(d.Petal_Length); })
+                .attr("r", 8)
                 .style("fill", "#61a3a9")
                 .style("opacity", 0.5)
 
@@ -112,16 +105,14 @@
                 // update circle position
                 scatter
                     .selectAll("circle")
-                    .attr('cx', function (d) { return newX(parseInt(d.saleable_area)) })
-                    .attr('cy', function (d) { return newY(parseInt(d.rent)) });
+                    .attr('cx', function (d) { return newX(d.Sepal_Length) })
+                    .attr('cy', function (d) { return newY(d.Petal_Length) });
             }
 
             document.getElementById('reset-btn').addEventListener('click', function () {
                 zoom.transform(SVG, d3.zoomIdentity);
             })
         })
-
     </script>
 </body>
-
 </html>
