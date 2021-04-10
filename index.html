@@ -44,7 +44,24 @@
 <body>
     <!-- Create a div where the circle will take place -->
     <div id="ftrent"></div>
-    <button id="reset-btn">reset</button>
+
+    <div>
+        <label>
+            Saleable Area:
+            <span id="xMin"></span> sqft
+            <input type="range" name="xMaxSlider" id="xMaxSlider">
+            <span id="xMax"></span> sqft
+        </label>
+    </div>
+
+    <div>
+        <label>
+            Rent:
+            $ <span id="yMin"></span>
+            <input type="range" name="yMaxSlider" id="yMaxSlider">
+            $ <span id="yMax"></span>
+        </label>
+    </div>
 
     <script>
         d3.csv('/24_tokwawan_cleaned.csv', function (data) {
@@ -64,15 +81,16 @@
 
             const getX = d => parseInt(d.saleable_area);
             const getY = d => parseInt(d.rent);
+            const xMin = 0;
+            const xMax = d3.max(data, getX) * 1.1;
+            const yMin = 0;
+            const yMax = d3.max(data, getY) * 1.1;
             const xLabel = 'Saleable Area';
             const yLabel = 'Rent';
 
             // Add X axis
             var x = d3.scaleLinear()
-                .domain([
-                    0,
-                    d3.max(data, getX) * 1.1,
-                ])
+                .domain([xMin, xMax])
                 .range([0, width]);
             var xAxis = SVG.append("g")
                 .attr("class", "grid")
@@ -86,10 +104,7 @@
 
             // Add Y axis
             var y = d3.scaleLinear()
-                .domain([
-                    0,
-                    d3.max(data, getY) * 1.1,
-                ])
+                .domain([yMin, yMax])
                 .range([height, 0]);
             var yAxis = SVG.append("g")
                 .attr("class", "grid")
@@ -159,6 +174,54 @@
                         .duration(500)
                         .style("opacity", 0);
                 });
+
+            // Set X max slider
+            document.getElementById('xMaxSlider').setAttribute('min', xMin);
+            document.getElementById('xMaxSlider').setAttribute('max', xMax);
+            document.getElementById('xMaxSlider').setAttribute('value', xMax);
+            document.getElementById('xMaxSlider').addEventListener('change', function (event) {
+                x.domain([xMin, event.target.value]);
+                xAxis.call(d3.axisBottom(x).ticks(5).tickSize(-height));
+                scatter
+                    .selectAll("circle")
+                    .attr('cx', function (d) { return x(getX(d)) })
+                    .attr('cy', function (d) { return y(getY(d)) });
+                updateSliderTexts();
+            });
+
+            // Set Y max slider
+            document.getElementById('yMaxSlider').setAttribute('min', yMin);
+            document.getElementById('yMaxSlider').setAttribute('max', yMax);
+            document.getElementById('yMaxSlider').setAttribute('value', yMax);
+            document.getElementById('yMaxSlider').addEventListener('change', function (event) {
+                y.domain([yMin, event.target.value]);
+                yAxis.call(d3.axisLeft(y).ticks(5).tickSize(-width));
+                scatter
+                    .selectAll("circle")
+                    .attr('cx', function (d) { return x(getX(d)) })
+                    .attr('cy', function (d) { return y(getY(d)) });
+                updateSliderTexts();
+            });
+
+            // Init slider texts
+            updateSliderTexts();
+
+            function updateSliderTexts() {
+                document.getElementById('xMin').textContent = thousandCommas(xMin);
+                document.getElementById('xMax').textContent = thousandCommas(document.getElementById('xMaxSlider').value);
+                document.getElementById('yMin').textContent = thousandCommas(yMin);
+                document.getElementById('yMax').textContent = thousandCommas(document.getElementById('yMaxSlider').value);
+            }
+
+            function thousandCommas(numberString) {
+                if (typeof numberString === 'number') {
+                    return (numberString).toLocaleString('en');
+                }
+                if (typeof numberString === 'string') {
+                    return parseFloat(numberString).toLocaleString('en');
+                }
+                return numberString;
+            }
 
             // // Set the zoom and Pan features: how much you can zoom, on which part, and what to do when there is a zoom
             // var zoom = d3.zoom()
