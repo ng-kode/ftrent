@@ -8,6 +8,24 @@
     <title>Document</title>
     <!-- Load d3.js -->
     <script src="https://d3js.org/d3.v4.js"></script>
+
+    <style>
+        .line {
+            fill: none;
+            stroke: steelblue;
+            stroke-width: 2px;
+        }
+
+        .grid line {
+            stroke: lightgrey;
+            stroke-opacity: 0.7;
+            shape-rendering: crispEdges;
+        }
+
+        .grid path {
+            stroke-width: 0;
+        }
+    </style>
 </head>
 
 <body>
@@ -42,8 +60,14 @@
                 ])
                 .range([0, width]);
             var xAxis = SVG.append("g")
+                .attr("class", "grid")
                 .attr("transform", "translate(0," + height + ")")
-                .call(d3.axisBottom(x));
+                .call(
+                    d3.axisBottom(x)
+                        .ticks(5)
+                        .tickSize(-height)
+                        // .tickFormat("")
+                );
 
             // Add Y axis
             var y = d3.scaleLinear()
@@ -53,7 +77,13 @@
                 ])
                 .range([height, 0]);
             var yAxis = SVG.append("g")
-                .call(d3.axisLeft(y));
+                .attr("class", "grid")
+                .call(
+                    d3.axisLeft(y)
+                        .ticks(5)
+                        .tickSize(-width)
+                        // .tickFormat("")
+                );
 
             // Add a clipPath: everything out of this area won't be drawn.
             var clip = SVG.append("defs").append("SVG:clipPath")
@@ -104,8 +134,8 @@
                 var newY = d3.event.transform.rescaleY(y);
 
                 // update axes with these new boundaries
-                xAxis.call(d3.axisBottom(newX))
-                yAxis.call(d3.axisLeft(newY))
+                xAxis.call(d3.axisBottom(newX).ticks(5).tickSize(-height))
+                yAxis.call(d3.axisLeft(newY).ticks(5).tickSize(-width))
 
                 // update circle position
                 scatter
