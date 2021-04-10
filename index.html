@@ -19,8 +19,8 @@
         d3.csv('/24_tokwawan_cleaned.csv', function (data) {
             // set the dimensions and margins of the graph
             var margin = { top: 10, right: 30, bottom: 30, left: 60 },
-                width = 460 - margin.left - margin.right,
-                height = 400 - margin.top - margin.bottom;
+                width = 980 - margin.left - margin.right,
+                height = 980 * 9 / 16 - margin.top - margin.bottom;
 
             // append the SVG object to the body of the page
             var SVG = d3.select("#ftrent")
