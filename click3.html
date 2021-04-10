@@ -32,21 +32,19 @@
         d3.csv('/24_tokwawan_cleaned.csv', function (data) {
             scatterPlot({
                 selector: '#ftrent',
-                width: 960,
-                height: 500,
                 data,
                 getX: (d) => parseInt(d.saleable_area),
                 getY: (d) => parseInt(d.rent)
             });
         })
 
-        function scatterPlot({selector, width, height, data, getX = (d) => d[0], getY = (d) => d[1]}) {
+        function scatterPlot({selector, width = innerWidth, height = innerHeight, data, getX = (d) => d[0], getY = (d) => d[1]}) {
             var zoom = d3.zoom()
                 .on("zoom", zoomed);
 
             var svg = d3.select(selector)
-                .on("touchstart", nozoom)
-                .on("touchmove", nozoom)
+                .on("touchstart", noZoom)
+                .on("touchmove", noZoom)
                 .append("svg")
                 .attr("width", width)
                 .attr("height", height);
@@ -95,13 +93,13 @@
             function clicked(d, i) {
                 if (d3.event.defaultPrevented) return; // zoomed
 
-                d3.select(this).transition()
-                    .style("fill", "black")
-                    .transition()
-                    .style("fill", "white");
+                // d3.select(this).transition()
+                //     .style("fill", "black")
+                //     .transition()
+                //     .style("fill", "white");
             }
 
-            function nozoom() {
+            function noZoom() {
                 d3.event.preventDefault();
             }
         }
