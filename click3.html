@@ -135,7 +135,7 @@
                     const { tooltip, data } = this.tooltips[id];
                     tooltip
                         .attr('x', this.x(this.getX(data) + this.pointRadius))
-                        .attr('y', this.y(this.getY(data) - 36 - this.pointRadius));
+                        .attr('y', this.y(this.getY(data) - this.pointRadius));
                 });
             }
 
