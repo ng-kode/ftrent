@@ -85,9 +85,6 @@
                 .attr("height", height)
                 .on("click", clicked);
 
-            var view = g.append("g")
-                .attr("class", "view");
-
             var x = d3.scaleLinear()
                 .domain([0, d3.max(data, getX) * 1.1])
                 .range([0, width]);
@@ -107,6 +104,17 @@
                 .attr("class", "tooltip")
                 .style("opacity", 0);
 
+            g.append("defs").append("SVG:clipPath")
+                .attr("id", "clip")
+                .append("SVG:rect")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("x", 0)
+                .attr("y", 0);
+
+            var view = g.append("g")
+                .attr("clip-path", "url(#clip)")
+                .attr("class", "view");
 
             view.selectAll("circle")
                 .data(data)
@@ -141,12 +149,18 @@
 
             function zoomed() {
                 var transform = d3.event.transform;
-                view.attr('transform', "translate(" + transform.x + "," + transform.y + ") scale(" + transform.k + ")");
+                // view.attr('transform', "translate(" + transform.x + "," + transform.y + ") scale(" + transform.k + ")");
 
                 var newX = transform.rescaleX(x);
                 var newY = d3.event.transform.rescaleY(y);
+
                 xAxis.call(d3.axisBottom(newX).ticks(5).tickSize(-height));
                 yAxis.call(d3.axisLeft(newY).ticks(5).tickSize(-width));
+
+                view
+                    .selectAll("circle")
+                    .attr('cx', function (d) { return newX(getX(d)) })
+                    .attr('cy', function (d) { return newY(getY(d)) });
             }
 
             function clicked(d, i) {
