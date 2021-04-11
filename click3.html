@@ -44,7 +44,7 @@
     <script src="https://d3js.org/d3.v4.js"></script>
     <script>
         d3.csv('/24_tokwawan_cleaned.csv', function (data) {
-            scatterPlot({
+            new ScatterPlot({
                 selector: '#ftrent',
                 data,
                 width: 980,
@@ -55,125 +55,143 @@
             });
         })
 
-        function scatterPlot({ selector, width, height, data, getX = (d) => d[0], getY = (d) => d[1], resetBtnSelector }) {
-            var margin = { top: 10, right: 30, bottom: 30, left: 60 };
-            width -= (margin.left + margin.right);
-            height -= (margin.top + margin.bottom);
+        class ScatterPlot {
+            constructor({
+                selector,
+                width: overallWidth,
+                height: overallHeight,
+                data,
+                getX = (d) => d[0],
+                getY = (d) => d[1],
+                resetBtnSelector
+            }) {
+                this.getX = getX;
+                this.getY = getY;
+                this.data = data;
 
-            var svg = d3.select(selector)
-                .on("touchstart", noZoom)
-                .on("touchmove", noZoom)
-                .append("svg")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom);
+                const margin = { top: 10, right: 30, bottom: 30, left: 60 };
+                this.width = overallWidth -= (margin.left + margin.right);
+                this.height = overallHeight -= (margin.top + margin.bottom);
 
-            var zoom = d3.zoom().on("zoom", zoomed);
+                const svg = d3.select(selector)
+                    .on("touchstart", function noZoom() {
+                        d3.event.preventDefault();
+                    })
+                    .on("touchmove", function noZoom() {
+                        d3.event.preventDefault();
+                    })
+                    .append("svg")
+                    .attr("width", this.width + margin.left + margin.right)
+                    .attr("height", this.height + margin.top + margin.bottom);
 
-            var g = svg.append("g")
-                .attr("transform",
-                    "translate(" + margin.left + "," + margin.top + ")")
-                .call(zoom);
+                this.g = svg.append("g")
+                    .attr("transform",
+                        "translate(" + margin.left + "," + margin.top + ")");
 
-            if (resetBtnSelector) {
-                d3.select(resetBtnSelector).on('click', function () {
-                    zoom.transform(g, d3.zoomIdentity);
-                });
+                this.g.append("rect")
+                    .attr("width", this.width)
+                    .attr("height", this.height)
+                    .on("click", function onBackgroundClicked(d, i) {
+                        if (d3.event.defaultPrevented) return; // zoomed
+                        // TODO: any action here
+                    });
+
+                this.createAxis();
+
+                this.createScatter();
+
+                this.tooltip = d3.select(selector).append("div")
+                    .attr("class", "tooltip")
+                    .style("opacity", 0);
+
+                const zoom = d3.zoom().on("zoom", this.zoomed);
+
+                this.g.call(zoom);
+
+                if (resetBtnSelector) {
+                    d3.select(resetBtnSelector).on('click', () => {
+                        zoom.transform(this.g, d3.zoomIdentity);
+                    });
+                }
             }
 
-            g.append("rect")
-                .attr("width", width)
-                .attr("height", height)
-                .on("click", clicked);
+            zoomed = () => {
+                const transform = d3.event.transform;
 
-            var x = d3.scaleLinear()
-                .domain([0, d3.max(data, getX) * 1.1])
-                .range([0, width]);
-            var xAxis = g.append("g")
-                .attr("class", "grid")
-                .attr("transform", "translate(0," + height + ")")
-                .call(d3.axisBottom(x).ticks(5).tickSize(-height));
+                const newX = transform.rescaleX(this.x);
+                const newY = d3.event.transform.rescaleY(this.y);
 
-            var y = d3.scaleLinear()
-                .domain([0, d3.max(data, getY) * 1.1])
-                .range([height, 0]);
-            var yAxis = g.append("g")
-                .attr("class", "grid")
-                .call(d3.axisLeft(y).ticks(5).tickSize(-width));
+                this.xAxis.call(d3.axisBottom(newX).ticks(5).tickSize(-this.height));
+                this.yAxis.call(d3.axisLeft(newY).ticks(5).tickSize(-this.width));
 
-            var tooltip = d3.select("body").append("div")
-                .attr("class", "tooltip")
-                .style("opacity", 0);
-
-            g.append("defs").append("SVG:clipPath")
-                .attr("id", "clip")
-                .append("SVG:rect")
-                .attr("width", width)
-                .attr("height", height)
-                .attr("x", 0)
-                .attr("y", 0);
-
-            var view = g.append("g")
-                .attr("clip-path", "url(#clip)")
-                .attr("class", "view");
-
-            view.selectAll("circle")
-                .data(data)
-                .enter().append("circle")
-                .attr("cx", function (d) { return x(getX(d)); })
-                .attr("cy", function (d) { return y(getY(d)); })
-                .attr("r", 4)
-                .style("fill", "#61a3a9")
-                .style("opacity", 0.5)
-                .on('click', function (d) {
-                    console.log('circle click', d)
-                })
-                .on("mouseover", function (d) {
-                    d3.select(this)
-                        .style('fill', 'red')
-
-                    tooltip.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                    tooltip.html(getX(d) + ', ' + getY(d))
-                        .style("left", (d3.event.pageX) + "px")
-                        .style("top", (d3.event.pageY - 28) + "px");
-                })
-                .on("mouseout", function (d) {
-                    d3.select(this)
-                        .style('fill', '#61a3a9')
-
-                    tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                });
-
-            function zoomed() {
-                var transform = d3.event.transform;
-                // view.attr('transform', "translate(" + transform.x + "," + transform.y + ") scale(" + transform.k + ")");
-
-                var newX = transform.rescaleX(x);
-                var newY = d3.event.transform.rescaleY(y);
-
-                xAxis.call(d3.axisBottom(newX).ticks(5).tickSize(-height));
-                yAxis.call(d3.axisLeft(newY).ticks(5).tickSize(-width));
-
-                view
+                this.scatter
                     .selectAll("circle")
-                    .attr('cx', function (d) { return newX(getX(d)) })
-                    .attr('cy', function (d) { return newY(getY(d)) });
+                    .attr('cx', (d) =>  newX(this.getX(d)))
+                    .attr('cy', (d) =>  newY(this.getY(d)));
             }
 
-            function clicked(d, i) {
-                if (d3.event.defaultPrevented) return; // zoomed
+            createAxis = () => {
+                this.x = d3.scaleLinear()
+                    .domain([0, d3.max(this.data, this.getX) * 1.1])
+                    .range([0, this.width]);
+                this.xAxis = this.g.append("g")
+                    .attr("class", "grid")
+                    .attr("transform", "translate(0," + this.height + ")")
+                    .call(d3.axisBottom(this.x).ticks(5).tickSize(-this.height));
 
-                // d3.select(this).transition()
-                //     .style("fill", "black")
-                //     .transition()
-                //     .style("fill", "white");
+                this.y = d3.scaleLinear()
+                    .domain([0, d3.max(this.data, this.getY) * 1.1])
+                    .range([this.height, 0]);
+                this.yAxis = this.g.append("g")
+                    .attr("class", "grid")
+                    .call(d3.axisLeft(this.y).ticks(5).tickSize(-this.width));
             }
 
-            function noZoom() {
-                d3.event.preventDefault();
+            createScatter = () => {
+                const self = this;
+
+                self.g.append("defs").append("SVG:clipPath")
+                    .attr("id", "clip")
+                    .append("SVG:rect")
+                    .attr("width", self.width)
+                    .attr("height", self.height)
+                    .attr("x", 0)
+                    .attr("y", 0);
+
+                self.scatter = self.g.append("g")
+                    .attr("clip-path", "url(#clip)")
+                    .attr("class", "scatter");
+
+                self.scatter.selectAll("circle")
+                    .data(self.data)
+                    .enter().append("circle")
+                    .attr("cx", (d) => self.x(self.getX(d)))
+                    .attr("cy", (d) => self.y(self.getY(d)))
+                    .attr("r", 4)
+                    .style("fill", "#61a3a9")
+                    .style("opacity", 0.5)
+                    .on('click', function (d) {
+                        console.log('circle click', d)
+                    })
+                    .on("mouseover", function(d) {
+                        d3.select(this)
+                            .style('fill', 'red')
+
+                        self.tooltip.transition()
+                            .duration(200)
+                            .style("opacity", .9);
+                        self.tooltip.html(self.getX(d) + ', ' + self.getY(d))
+                            .style("left", (d3.event.pageX) + "px")
+                            .style("top", (d3.event.pageY - 28) + "px");
+                    })
+                    .on("mouseout", function(d) {
+                        d3.select(this)
+                            .style('fill', '#61a3a9')
+
+                        self.tooltip.transition()
+                            .duration(500)
+                            .style("opacity", 0);
+                    });
             }
         }
     </script>
