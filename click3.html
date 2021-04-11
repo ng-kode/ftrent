@@ -114,37 +114,39 @@
             zoomed = () => {
                 const transform = d3.event.transform;
 
-                const newX = transform.rescaleX(this.x);
-                const newY = transform.rescaleY(this.y);
+                this.x = transform.rescaleX(this.originalX);
+                this.y = transform.rescaleY(this.originalY);
 
-                this.xAxis.call(d3.axisBottom(newX).ticks(5).tickSize(-this.height));
-                this.yAxis.call(d3.axisLeft(newY).ticks(5).tickSize(-this.width));
+                this.xAxis.call(d3.axisBottom(this.x).ticks(5).tickSize(-this.height));
+                this.yAxis.call(d3.axisLeft(this.y).ticks(5).tickSize(-this.width));
 
                 this.scatter
                     .selectAll("circle")
-                    .attr('cx', (d) =>  newX(this.getX(d)))
-                    .attr('cy', (d) =>  newY(this.getY(d)));
+                    .attr('cx', (d) =>  this.x(this.getX(d)))
+                    .attr('cy', (d) =>  this.y(this.getY(d)));
 
                 Object.keys(this.tooltips).forEach((id) => {
                     const { tooltip , data } = this.tooltips[id];
                     tooltip
-                        .attr('x', newX(this.getX(data) + this.pointRadius))
-                        .attr('y', newY(this.getY(data) - 36 - this.pointRadius));
+                        .attr('x', this.x(this.getX(data) + this.pointRadius))
+                        .attr('y', this.y(this.getY(data) - 36 - this.pointRadius));
                 });
             }
 
             createAxis = () => {
-                this.x = d3.scaleLinear()
+                this.originalX = d3.scaleLinear()
                     .domain([0, d3.max(this.data, this.getX) * 1.1])
                     .range([0, this.width]);
+                this.x = this.originalX;
                 this.xAxis = this.g.append("g")
                     .attr("class", "grid")
                     .attr("transform", "translate(0," + this.height + ")")
                     .call(d3.axisBottom(this.x).ticks(5).tickSize(-this.height));
 
-                this.y = d3.scaleLinear()
+                this.originalY = d3.scaleLinear()
                     .domain([0, d3.max(this.data, this.getY) * 1.1])
                     .range([this.height, 0]);
+                this.y = this.originalY;
                 this.yAxis = this.g.append("g")
                     .attr("class", "grid")
                     .call(d3.axisLeft(this.y).ticks(5).tickSize(-this.width));
