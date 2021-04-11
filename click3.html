@@ -202,7 +202,10 @@
                             self.oneTimeTooltip,
                         );
                         self.writeTooltip(
-                            `$${self.getY(d).toLocaleString('en')}<br/>${self.getX(d).toLocaleString('en')}呎`,
+                            `
+                            ${d.building_name} <br/>
+                            $${self.getY(d).toLocaleString('en')}<br/>
+                            ${self.getX(d).toLocaleString('en')}呎`,
                             self.oneTimeTooltip,
                         );
                     })
