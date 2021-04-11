@@ -25,19 +25,23 @@
             stroke-opacity: 0.7;
         }
     </style>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
 </head>
 
 <body>
 
     <div id="ftrent"></div>
-    <button class="btn btn-primary" id="reset-btn">reset</button>
+    <button class="btn btn-secondary" id="reset-btn">reset</button>
+    <div id="selected-flats"></div>
 
     <script src="https://d3js.org/d3.v4.js"></script>
     <script>
         d3.csv('/24_tokwawan_cleaned.csv', function (data) {
             new ScatterPlot({
                 selector: '#ftrent',
-                data: data.map(d => ({ ...d, id: d.detail_url })),
+                data: data.map(d => ({ ...d, id: d.detail_url.replace('https://www.28hse.com/rent/residential/property-', 'id') })),
                 width: 980,
                 height: 600,
                 getX: (d) => parseInt(d.saleable_area),
@@ -62,7 +66,7 @@
                 this.data = data;
                 this.pointRadius = pointRadius;
                 this.selector = selector;
-                this.tooltips = {};
+                this.selectedPoints = {};
 
                 const margin = { top: 10, right: 30, bottom: 30, left: 60 };
                 this.width = overallWidth -= (margin.left + margin.right);
@@ -119,15 +123,6 @@
                     .selectAll("circle")
                     .attr('cx', (d) => this.x(this.getX(d)))
                     .attr('cy', (d) => this.y(this.getY(d)));
-
-                Object.keys(this.tooltips).forEach((id) => {
-                    const { tooltip, data } = this.tooltips[id];
-                    this.relocateTooltip(
-                        this.x(this.getX(data) + this.pointRadius),
-                        this.y(this.getY(data) - this.pointRadius),
-                        tooltip,
-                    )
-                });
             }
 
             createAxis = () => {
@@ -151,11 +146,11 @@
 
             createTooltip = () => {
                 const g = this.g.append('g')
-                    .attr('class', 'tooltip');
+                    .attr('class', 'ftrent-tooltip');
 
                 const div = g.append('foreignObject')
-                    .attr('width', 160)
-                    .attr('height', 160);
+                    .attr('width', '100%')
+                    .attr('height', '100%');
 
                 return { g, div }
             }
@@ -199,39 +194,63 @@
                     .style("opacity", 0.5)
                     .on("mouseover", function (d) {
                         d3.select(this).style('fill', 'red');
+
+                        self.oneTimeTooltip = self.createTooltip();
+                        self.relocateTooltip(
+                            self.x(self.getX(d) + self.pointRadius),
+                            self.y(self.getY(d) - self.pointRadius),
+                            self.oneTimeTooltip,
+                        );
+                        self.writeTooltip(
+                            `$${self.getY(d).toLocaleString('en')}<br/>${self.getX(d).toLocaleString('en')}呎`,
+                            self.oneTimeTooltip,
+                        );
                     })
                     .on("mouseout", function (d) {
-                        if (self.tooltips[d.id]) {
+                        self.removeTooltip(self.oneTimeTooltip);
+                        if (self.isFlatSelected(d.id)) {
                             return;
                         }
                         d3.select(this).style('fill', '#61a3a9');
                     })
                     .on('click', function (d) {
                         const { id } = d;
-                        if (self.tooltips[id]) {
+                        if (self.isFlatSelected(id)) {
                             d3.select(this).style('fill', '#61a3a9');
-                            const { tooltip } = self.tooltips[id];
-                            self.removeTooltip(tooltip);
-                            delete self.tooltips[id];
+                            self.deselectFlat(d);
                         } else {
                             d3.select(this).style('fill', 'red');
-
-                            const tooltip = self.createTooltip();
-                            self.tooltips[id] = {
-                                tooltip,
-                                data: d,
-                            };
-                            self.relocateTooltip(
-                                self.x(self.getX(d) + self.pointRadius),
-                                self.y(self.getY(d) - self.pointRadius),
-                                tooltip,
-                            );
-                            self.writeTooltip(
-                                self.getX(d) + ', ' + self.getY(d),
-                                tooltip,
-                            );
+                            self.selectFlat(d);
                         }
                     });
+            }
+
+            selectFlat = (data) => {
+                this.selectedPoints[data.id] = data;
+                const card = document.createElement('div');
+                card.innerHTML = `
+                    <div class="card" id="${data.id}" style="width: 18rem;">
+                        <img src="..." class="card-img-top" alt="...">
+                        <div class="card-body">
+                            <h5 class="card-title">${data.building_name}</h5>
+                            <p class="card-text">
+                                租$${this.getY(data)} <br/>
+                                ${this.getX(data)} 平方呎
+                            </p>
+                            <a href="${data.detail_url}" target="_blank" class="btn btn-secondary">Check details</a>
+                        </div>
+                    </div>
+                `
+                document.getElementById('selected-flats').appendChild(card);
+            }
+
+            deselectFlat = (data) => {
+                delete this.selectedPoints[data.id];
+                document.querySelector(`.card#${data.id}`).remove();
+            }
+
+            isFlatSelected = (id) => {
+                return !!this.selectedPoints[id];
             }
         }
     </script>
