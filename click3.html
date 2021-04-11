@@ -12,13 +12,9 @@
         }
 
         .tooltip {
-            position: absolute;
-            text-align: center;
             padding: 8px;
-            background: lightcoral;
-            border: 0px;
-            border-radius: 4px;
-            pointer-events: none;
+            fill: lightcoral;
+            rx: 4px;
         }
 
         .grid path,
@@ -46,7 +42,7 @@
         d3.csv('/24_tokwawan_cleaned.csv', function (data) {
             new ScatterPlot({
                 selector: '#ftrent',
-                data,
+                data: data.map(d => ({ ...d, id: d.detail_url })),
                 width: 980,
                 height: 600,
                 getX: (d) => parseInt(d.saleable_area),
@@ -70,12 +66,14 @@
                 this.getY = getY;
                 this.data = data;
                 this.pointRadius = pointRadius;
+                this.selector = selector;
+                this.tooltips = {};
 
                 const margin = { top: 10, right: 30, bottom: 30, left: 60 };
                 this.width = overallWidth -= (margin.left + margin.right);
                 this.height = overallHeight -= (margin.top + margin.bottom);
 
-                const svg = d3.select(selector)
+                const svg = d3.select(this.selector)
                     .on("touchstart", function noZoom() {
                         d3.event.preventDefault();
                     })
@@ -102,10 +100,6 @@
 
                 this.createScatter();
 
-                this.tooltip = d3.select(selector).append("div")
-                    .attr("class", "tooltip")
-                    .style("opacity", 0);
-
                 const zoom = d3.zoom().on("zoom", this.zoomed);
 
                 this.g.call(zoom);
@@ -121,7 +115,7 @@
                 const transform = d3.event.transform;
 
                 const newX = transform.rescaleX(this.x);
-                const newY = d3.event.transform.rescaleY(this.y);
+                const newY = transform.rescaleY(this.y);
 
                 this.xAxis.call(d3.axisBottom(newX).ticks(5).tickSize(-this.height));
                 this.yAxis.call(d3.axisLeft(newY).ticks(5).tickSize(-this.width));
@@ -130,6 +124,13 @@
                     .selectAll("circle")
                     .attr('cx', (d) =>  newX(this.getX(d)))
                     .attr('cy', (d) =>  newY(this.getY(d)));
+
+                Object.keys(this.tooltips).forEach((id) => {
+                    const { tooltip , data } = this.tooltips[id];
+                    tooltip
+                        .attr('x', newX(this.getX(data) + this.pointRadius))
+                        .attr('y', newY(this.getY(data) - 36 - this.pointRadius));
+                });
             }
 
             createAxis = () => {
@@ -147,6 +148,13 @@
                 this.yAxis = this.g.append("g")
                     .attr("class", "grid")
                     .call(d3.axisLeft(this.y).ticks(5).tickSize(-this.width));
+            }
+
+            createTooltip = () => {
+                return this.g.append('rect')
+                    .attr("class", "tooltip")
+                    .attr('width', 100)
+                    .attr('height', 100);
             }
 
             createScatter = () => {
@@ -172,25 +180,36 @@
                     .attr("r", this.pointRadius)
                     .style("fill", "#61a3a9")
                     .style("opacity", 0.5)
-                    .on('click', function (d) {
-                        console.log('circle click', d)
-                    })
                     .on("mouseover", function(d) {
-                        d3.select(this)
-                            .style('fill', 'red')
-
-                        self.tooltip
-                            .style("opacity", .9)
-                            .html(self.getX(d) + ', ' + self.getY(d))
-                            .style("left", (d3.event.pageX + self.pointRadius) + "px")
-                            .style("top", (d3.event.pageY - 36 - self.pointRadius) + "px");
+                        d3.select(this).style('fill', 'red');
                     })
                     .on("mouseout", function(d) {
-                        d3.select(this)
-                            .style('fill', '#61a3a9')
+                        if (self.tooltips[d.id]) {
+                            return;
+                        }
+                        d3.select(this).style('fill', '#61a3a9');
+                    })
+                    .on('click', function (d) {
+                        const { id } = d;
+                        if (self.tooltips[id]) {
+                            d3.select(this).style('fill', '#61a3a9');
+                            const { tooltip } = self.tooltips[id];
+                            tooltip.remove();
+                            delete self.tooltips[id];
+                        } else {
+                            d3.select(this).style('fill', 'red');
 
-                        self.tooltip
-                            .style("opacity", 0);
+                            const tooltip = self.createTooltip();
+                            self.tooltips[id] = {
+                                tooltip,
+                                data: d,
+                            };
+
+                            tooltip.style("opacity", .9)
+                                .html(self.getX(d) + ', ' + self.getY(d))
+                                .attr('x', self.x(self.getX(d) + self.pointRadius))
+                                .attr('y', self.y(self.getY(d) - self.pointRadius));
+                        }
                     });
             }
         }
