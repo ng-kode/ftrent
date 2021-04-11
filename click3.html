@@ -34,7 +34,6 @@
 
     <div id="ftrent"></div>
     <button class="btn btn-secondary" id="reset-btn">reset</button>
-    <div id="selected-flats"></div>
 
     <script src="https://d3js.org/d3.v4.js"></script>
     <script>
@@ -66,7 +65,6 @@
                 this.data = data;
                 this.pointRadius = pointRadius;
                 this.selector = selector;
-                this.selectedPoints = {};
 
                 const margin = { top: 10, right: 30, bottom: 30, left: 60 };
                 this.width = overallWidth -= (margin.left + margin.right);
@@ -186,7 +184,11 @@
 
                 self.scatter.selectAll("circle")
                     .data(self.data)
-                    .enter().append("circle")
+                    .enter()
+                    .append('a')
+                    .attr('target', '_blank')
+                    .attr('href', (d) => d.detail_url)
+                    .append("circle")
                     .attr("cx", (d) => self.x(self.getX(d)))
                     .attr("cy", (d) => self.y(self.getY(d)))
                     .attr("r", this.pointRadius)
@@ -205,55 +207,15 @@
                             `
                             ${d.building_name} <br/>
                             $${self.getY(d).toLocaleString('en')}<br/>
-                            ${self.getX(d).toLocaleString('en')}呎`,
+                            ${self.getX(d).toLocaleString('en')}呎<br/>
+                            呎價$${(self.getY(d)/self.getX(d)).toFixed(1)}`,
                             self.oneTimeTooltip,
                         );
                     })
                     .on("mouseout", function (d) {
                         self.removeTooltip(self.oneTimeTooltip);
-                        if (self.isFlatSelected(d.id)) {
-                            return;
-                        }
                         d3.select(this).style('fill', '#61a3a9');
-                    })
-                    .on('click', function (d) {
-                        const { id } = d;
-                        if (self.isFlatSelected(id)) {
-                            d3.select(this).style('fill', '#61a3a9');
-                            self.deselectFlat(d);
-                        } else {
-                            d3.select(this).style('fill', 'red');
-                            self.selectFlat(d);
-                        }
                     });
-            }
-
-            selectFlat = (data) => {
-                this.selectedPoints[data.id] = data;
-                const card = document.createElement('div');
-                card.innerHTML = `
-                    <div class="card" id="${data.id}" style="width: 18rem;">
-                        <img src="..." class="card-img-top" alt="...">
-                        <div class="card-body">
-                            <h5 class="card-title">${data.building_name}</h5>
-                            <p class="card-text">
-                                租$${this.getY(data)} <br/>
-                                ${this.getX(data)} 平方呎
-                            </p>
-                            <a href="${data.detail_url}" target="_blank" class="btn btn-secondary">Check details</a>
-                        </div>
-                    </div>
-                `
-                document.getElementById('selected-flats').appendChild(card);
-            }
-
-            deselectFlat = (data) => {
-                delete this.selectedPoints[data.id];
-                document.querySelector(`.card#${data.id}`).remove();
-            }
-
-            isFlatSelected = (id) => {
-                return !!this.selectedPoints[id];
             }
         }
     </script>
