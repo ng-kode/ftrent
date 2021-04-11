@@ -153,22 +153,11 @@
                 const g = this.g.append('g')
                     .attr('class', 'tooltip');
 
-                const width = 100;
-                const height = 100;
+                const div = g.append('foreignObject')
+                    .attr('width', 160)
+                    .attr('height', 160);
 
-                const rect = g.append('rect')
-                    .attr('x', 0)
-                    .attr('y', 0)
-                    .attr('width', width)
-                    .attr('height', height)
-                    .style('opacity', 0.9)
-                    .style('fill', 'lightcoral');
-
-                const text = g.append('text')
-                    .attr('x', width/2)
-                    .attr('y', height/2);
-
-                return { g, rect, text }
+                return { g, div }
             }
 
             relocateTooltip = (x, y, tooltip) => {
@@ -178,7 +167,7 @@
             }
 
             writeTooltip = (htmlString, tooltip) => {
-                tooltip.text.html(htmlString);
+                tooltip.div.html(htmlString);
             }
 
             removeTooltip = (tooltip) => {
