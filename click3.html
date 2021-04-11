@@ -15,9 +15,9 @@
             position: absolute;
             text-align: center;
             padding: 8px;
-            background: lightsteelblue;
+            background: lightcoral;
             border: 0px;
-            border-radius: 8px;
+            border-radius: 4px;
             pointer-events: none;
         }
 
@@ -63,11 +63,13 @@
                 data,
                 getX = (d) => d[0],
                 getY = (d) => d[1],
-                resetBtnSelector
+                resetBtnSelector,
+                pointRadius = 4,
             }) {
                 this.getX = getX;
                 this.getY = getY;
                 this.data = data;
+                this.pointRadius = pointRadius;
 
                 const margin = { top: 10, right: 30, bottom: 30, left: 60 };
                 this.width = overallWidth -= (margin.left + margin.right);
@@ -167,7 +169,7 @@
                     .enter().append("circle")
                     .attr("cx", (d) => self.x(self.getX(d)))
                     .attr("cy", (d) => self.y(self.getY(d)))
-                    .attr("r", 4)
+                    .attr("r", this.pointRadius)
                     .style("fill", "#61a3a9")
                     .style("opacity", 0.5)
                     .on('click', function (d) {
@@ -177,19 +179,17 @@
                         d3.select(this)
                             .style('fill', 'red')
 
-                        self.tooltip.transition()
-                            .duration(200)
-                            .style("opacity", .9);
-                        self.tooltip.html(self.getX(d) + ', ' + self.getY(d))
-                            .style("left", (d3.event.pageX) + "px")
-                            .style("top", (d3.event.pageY - 28) + "px");
+                        self.tooltip
+                            .style("opacity", .9)
+                            .html(self.getX(d) + ', ' + self.getY(d))
+                            .style("left", (d3.event.pageX + self.pointRadius) + "px")
+                            .style("top", (d3.event.pageY - 36 - self.pointRadius) + "px");
                     })
                     .on("mouseout", function(d) {
                         d3.select(this)
                             .style('fill', '#61a3a9')
 
-                        self.tooltip.transition()
-                            .duration(500)
+                        self.tooltip
                             .style("opacity", 0);
                     });
             }
