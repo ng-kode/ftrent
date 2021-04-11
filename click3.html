@@ -133,9 +133,11 @@
 
                 Object.keys(this.tooltips).forEach((id) => {
                     const { tooltip, data } = this.tooltips[id];
-                    tooltip
-                        .attr('x', this.x(this.getX(data) + this.pointRadius))
-                        .attr('y', this.y(this.getY(data) - this.pointRadius));
+                    this.relocateTooltip(
+                        this.x(this.getX(data) + this.pointRadius),
+                        this.y(this.getY(data) - this.pointRadius),
+                        tooltip,
+                    )
                 });
             }
 
@@ -162,7 +164,18 @@
                 return this.g.append('rect')
                     .attr("class", "tooltip")
                     .attr('width', 100)
-                    .attr('height', 100);
+                    .attr('height', 100)
+                    .style('opacity', 0.9);
+            }
+
+            relocateTooltip = (x, y, tooltip) => {
+                tooltip
+                    .attr('x', x)
+                    .attr('y', y);
+            }
+
+            writeTooltip = (htmlString, tooltip) => {
+                tooltip.html(htmlString);
             }
 
             createScatter = () => {
@@ -212,11 +225,15 @@
                                 tooltip,
                                 data: d,
                             };
-
-                            tooltip.style("opacity", .9)
-                                .html(self.getX(d) + ', ' + self.getY(d))
-                                .attr('x', self.x(self.getX(d) + self.pointRadius))
-                                .attr('y', self.y(self.getY(d) - self.pointRadius));
+                            self.relocateTooltip(
+                                self.x(self.getX(d) + self.pointRadius),
+                                self.y(self.getY(d) - self.pointRadius),
+                                tooltip,
+                            );
+                            self.writeTooltip(
+                                self.getX(d) + ', ' + self.getY(d),
+                                tooltip,
+                            );
                         }
                     });
             }
