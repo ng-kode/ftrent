@@ -140,6 +140,8 @@
 
                 this.createScatter();
 
+                this.redrawRegressionLine();
+
                 const zoom = d3.zoom().on("zoom", this.zoomed);
 
                 this.g.call(zoom);
@@ -158,9 +160,9 @@
                 this.y = transform.rescaleY(this.originalY);
 
                 this.xAxis.call(d3.axisBottom(this.x)
-                        .ticks(5)
-                        .tickFormat(d3.format(this.xTickFormat))
-                        .tickSize(-this.height)
+                    .ticks(5)
+                    .tickFormat(d3.format(this.xTickFormat))
+                    .tickSize(-this.height)
                 );
                 this.yAxis.call(d3.axisLeft(this.y)
                     .ticks(5)
@@ -172,6 +174,8 @@
                     .selectAll("circle")
                     .attr('cx', (d) => this.x(this.getX(d)))
                     .attr('cy', (d) => this.y(this.getY(d)));
+
+                this.redrawRegressionLine();
             }
 
             createAxis = () => {
@@ -285,6 +289,58 @@
                         self.removeTooltip(self.oneTimeTooltip);
                         d3.select(this).style('fill', '#61a3a9');
                     });
+            }
+
+            redrawRegressionLine = () => {
+                if (!this.regression) {
+                    this.regression = this.OLS(this.data.map(this.getX), this.data.map(this.getY));
+                }
+
+                const line = d3.line()
+                    .x((d) => this.x(this.getX(d)))
+                    .y((d) => this.y(this.regression(this.getX(d))));
+
+                if (!this.regressionLine) {
+                    this.regressionLine = this.g
+                        .append("path")
+                        .attr("d", line(this.data))
+                        .attr("stroke", "lightcoral")
+                        .style('opacity', 0.9)
+                        .attr('stroke-width', 4);
+
+                    this.g.append("text")
+                            .attr("y", this.height * 0.8)
+                            .attr("x", this.width * 0.8)
+                            .attr('text-anchor', 'middle')
+                            .text(this.slope);
+                } else {
+                    this.regressionLine.attr("d", line(this.data));
+                }
+            }
+
+            OLS = (XaxisData, Yaxisdata) => {
+                var ReduceAddition = function (prev, cur) { return prev + cur; };
+
+                // finding the mean of Xaxis and Yaxis data
+                var xBar = XaxisData.reduce(ReduceAddition) * 1.0 / XaxisData.length;
+                var yBar = Yaxisdata.reduce(ReduceAddition) * 1.0 / Yaxisdata.length;
+
+                var SquareXX = XaxisData.map(function (d) { return Math.pow(d - xBar, 2); })
+                    .reduce(ReduceAddition);
+
+                var ssYY = Yaxisdata.map(function (d) { return Math.pow(d - yBar, 2); })
+                    .reduce(ReduceAddition);
+
+                var MeanDiffXY = XaxisData.map(function (d, i) { return (d - xBar) * (Yaxisdata[i] - yBar); })
+                    .reduce(ReduceAddition);
+
+                this.slope = MeanDiffXY / SquareXX;
+                var intercept = yBar - (xBar * this.slope);
+
+                // returning regression function
+                return function (x) {
+                    return x * this.slope + intercept
+                }
             }
         }
     </script>
