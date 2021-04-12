@@ -41,8 +41,8 @@
     <script src="https://d3js.org/d3.v4.js"></script>
     <script>
         d3.csv('/24_tokwawan_cleaned.csv', function (data) {
-            const getX = (d) => parseInt(d.rent)
-            const getY = (d) => parseInt(d.saleable_area);
+            const getX = (d) => parseInt(d.saleable_area)
+            const getY = (d) => parseInt(d.rent);
             new ScatterPlot({
                 selector: 'body',
                 data: data.map(d => ({ ...d, id: d.detail_url.replace('https://www.28hse.com/rent/residential/property-', 'id') })),
@@ -50,14 +50,14 @@
                 height: innerHeight - 60,
                 getX,
                 getY,
-                xLabel: '月租',
-                yLabel: '平方呎',
-                xTickFormat: '$,',
+                xLabel: '平方呎',
+                yLabel: '月租',
+                yTickFormat: '$,',
                 resetBtnSelector: '#reset-btn',
                 pointRadius: 16,
                 tooltipHtml: (d) => {
-                    const saleableArea = getY(d);
-                    const rent = getX(d);
+                    const saleableArea = getX(d);
+                    const rent = getY(d);
                     const rentPerSq = (rent / saleableArea).toFixed(0);
                     const { detail_url, thumbnailurl: thumbnail_url, building_name } = d;
 
