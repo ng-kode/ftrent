@@ -38,14 +38,34 @@
     <script src="https://d3js.org/d3.v4.js"></script>
     <script>
         d3.csv('/24_tokwawan_cleaned.csv', function (data) {
+            const getX = (d) => parseInt(d.saleable_area)
+            const getY = (d) => parseInt(d.rent);
             new ScatterPlot({
                 selector: '#ftrent',
                 data: data.map(d => ({ ...d, id: d.detail_url.replace('https://www.28hse.com/rent/residential/property-', 'id') })),
                 width: 980,
                 height: 600,
-                getX: (d) => parseInt(d.saleable_area),
-                getY: (d) => parseInt(d.rent),
+                getX,
+                getY,
                 resetBtnSelector: '#reset-btn',
+                tooltipHtml: (d) => {
+                    const saleableArea = getX(d).toLocaleString('en');
+                    const rent = getY(d).toLocaleString('en');
+                    const rentPerSq = (getY(d) / getX(d)).toFixed(0);
+                    const { detail_url, thumbnailurl: thumbnail_url, building_name } = d;
+
+                    return `
+                        <div class="card" style="width: 18rem;">
+                            <img src="${thumbnail_url}" class="card-img-top" style="max-height: 180px; width: auto;" alt="thumbnail_${building_name}">
+                            <div class="card-body">
+                                <h5 class="card-title">${building_name}</h5>
+                                <p class="card-text">
+                                    ${saleableArea}呎, 月租$${rent}（$${rentPerSq}@呎）
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                }
             });
         })
 
@@ -59,12 +79,16 @@
                 getY = (d) => d[1],
                 resetBtnSelector,
                 pointRadius = 4,
+                tooltipHtml,
             }) {
                 this.getX = getX;
                 this.getY = getY;
                 this.data = data;
                 this.pointRadius = pointRadius;
                 this.selector = selector;
+                this.tooltipHtml = tooltipHtml || function (d) {
+                    return `${this.getX(d)}, ${this.getY(d)}`;
+                };
 
                 const margin = { top: 10, right: 30, bottom: 30, left: 60 };
                 this.width = overallWidth -= (margin.left + margin.right);
@@ -203,14 +227,7 @@
                             self.y(self.getY(d) - self.pointRadius),
                             self.oneTimeTooltip,
                         );
-                        self.writeTooltip(
-                            `
-                            ${d.building_name} <br/>
-                            $${self.getY(d).toLocaleString('en')}<br/>
-                            ${self.getX(d).toLocaleString('en')}呎<br/>
-                            呎價$${(self.getY(d)/self.getX(d)).toFixed(1)}`,
-                            self.oneTimeTooltip,
-                        );
+                        self.writeTooltip(self.tooltipHtml(d), self.oneTimeTooltip);
                     })
                     .on("mouseout", function (d) {
                         self.removeTooltip(self.oneTimeTooltip);
