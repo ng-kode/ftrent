@@ -37,8 +37,8 @@
     <script src="https://d3js.org/d3.v4.js"></script>
     <script>
         d3.csv('/24_tokwawan_cleaned.csv', function (data) {
-            const getX = (d) => parseInt(d.saleable_area)
-            const getY = (d) => parseInt(d.rent);
+            const getX = (d) => parseInt(d.rent)
+            const getY = (d) => parseInt(d.saleable_area);
             new ScatterPlot({
                 selector: 'body',
                 data: data.map(d => ({ ...d, id: d.detail_url.replace('https://www.28hse.com/rent/residential/property-', 'id') })),
@@ -49,9 +49,9 @@
                 resetBtnSelector: '#reset-btn',
                 pointRadius: 16,
                 tooltipHtml: (d) => {
-                    const saleableArea = getX(d).toLocaleString('en');
-                    const rent = getY(d).toLocaleString('en');
-                    const rentPerSq = (getY(d) / getX(d)).toFixed(0);
+                    const saleableArea = getY(d);
+                    const rent = getX(d);
+                    const rentPerSq = (rent / saleableArea).toFixed(0);
                     const { detail_url, thumbnailurl: thumbnail_url, building_name } = d;
 
                     return `
@@ -60,7 +60,9 @@
                             <div class="card-body">
                                 <h5 class="card-title">${building_name}</h5>
                                 <p class="card-text">
-                                    ${saleableArea}呎, 月租$${rent}（$${rentPerSq}@呎）
+                                    ${saleableArea.toLocaleString('en')}呎,
+                                    月租$${rent.toLocaleString('en')}
+                                    （$${rentPerSq}@呎）
                                 </p>
                             </div>
                         </div>
