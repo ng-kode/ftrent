@@ -52,6 +52,7 @@
                 getY,
                 xLabel: '月租',
                 yLabel: '平方呎',
+                xTickFormat: '$,',
                 resetBtnSelector: '#reset-btn',
                 pointRadius: 16,
                 tooltipHtml: (d) => {
@@ -90,6 +91,8 @@
                 tooltipHtml,
                 xLabel = '',
                 yLabel = '',
+                xTickFormat = ',',
+                yTickFormat = ',',
             }) {
                 this.getX = getX;
                 this.getY = getY;
@@ -101,6 +104,8 @@
                 };
                 this.xLabel = xLabel;
                 this.yLabel = yLabel;
+                this.xTickFormat = xTickFormat;
+                this.yTickFormat = yTickFormat;
 
                 this.margin = { top: 10, right: 30, bottom: 60, left: 60 };
                 this.width = overallWidth -= (this.margin.left + this.margin.right);
@@ -152,8 +157,16 @@
                 this.x = transform.rescaleX(this.originalX);
                 this.y = transform.rescaleY(this.originalY);
 
-                this.xAxis.call(d3.axisBottom(this.x).ticks(5).tickSize(-this.height));
-                this.yAxis.call(d3.axisLeft(this.y).ticks(5).tickSize(-this.width));
+                this.xAxis.call(d3.axisBottom(this.x)
+                        .ticks(5)
+                        .tickFormat(d3.format(this.xTickFormat))
+                        .tickSize(-this.height)
+                );
+                this.yAxis.call(d3.axisLeft(this.y)
+                    .ticks(5)
+                    .tickFormat(d3.format(this.yTickFormat))
+                    .tickSize(-this.width)
+                );
 
                 this.scatter
                     .selectAll("circle")
@@ -169,7 +182,11 @@
                 this.xAxis = this.g.append("g")
                     .attr("class", "grid")
                     .attr("transform", "translate(0," + this.height + ")")
-                    .call(d3.axisBottom(this.x).ticks(5).tickSize(-this.height));
+                    .call(d3.axisBottom(this.x)
+                        .ticks(5)
+                        .tickFormat(d3.format(this.xTickFormat))
+                        .tickSize(-this.height)
+                    );
 
                 this.originalY = d3.scaleLinear()
                     .domain([0, d3.max(this.data, this.getY) * 1.1])
@@ -177,7 +194,11 @@
                 this.y = this.originalY;
                 this.yAxis = this.g.append("g")
                     .attr("class", "grid")
-                    .call(d3.axisLeft(this.y).ticks(5).tickSize(-this.width));
+                    .call(d3.axisLeft(this.y)
+                        .ticks(5)
+                        .tickFormat(d3.format(this.yTickFormat))
+                        .tickSize(-this.width)
+                    );
             }
 
             addAxisLabels = () => {
