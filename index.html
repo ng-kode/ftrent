@@ -32,7 +32,6 @@
 
 <body>
 
-    <div id="ftrent"></div>
     <button class="btn btn-secondary" id="reset-btn">reset</button>
 
     <script src="https://d3js.org/d3.v4.js"></script>
@@ -41,13 +40,14 @@
             const getX = (d) => parseInt(d.saleable_area)
             const getY = (d) => parseInt(d.rent);
             new ScatterPlot({
-                selector: '#ftrent',
+                selector: 'body',
                 data: data.map(d => ({ ...d, id: d.detail_url.replace('https://www.28hse.com/rent/residential/property-', 'id') })),
-                width: 980,
-                height: 600,
+                width: innerWidth,
+                height: innerHeight - 100,
                 getX,
                 getY,
                 resetBtnSelector: '#reset-btn',
+                pointRadius: 16,
                 tooltipHtml: (d) => {
                     const saleableArea = getX(d).toLocaleString('en');
                     const rent = getY(d).toLocaleString('en');
