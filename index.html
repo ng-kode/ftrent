@@ -74,6 +74,9 @@
                             </div>
                         </div>
                     `;
+                },
+                regressionLegend: (slope, intercept) => {
+                    return `平均呎價$${d3.median(data, d => getRent(d) / getSaleableArea(d)).toFixed(1)}`;
                 }
             });
         })
@@ -327,6 +330,7 @@
                         .attr("x", this.width * 0.8)
                         .attr('text-anchor', 'middle')
                         .style('fill', 'lightcoral')
+                        .style('font-size', 32)
                         .text(this.regressionLegend(this.slope, this.intercept));
                 } else {
                     this.regressionLine.attr("d", line(this.data));
