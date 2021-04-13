@@ -41,23 +41,23 @@
     <script src="https://d3js.org/d3.v4.js"></script>
     <script>
         d3.csv('/24_tokwawan_cleaned.csv', function (data) {
-            const getX = (d) => parseInt(d.saleable_area)
-            const getY = (d) => parseInt(d.rent);
+            const getSaleableArea = (d) => parseInt(d.saleable_area)
+            const getRent = (d) => parseInt(d.rent);
             new ScatterPlot({
                 selector: 'body',
                 data: data.map(d => ({ ...d, id: d.detail_url.replace('https://www.28hse.com/rent/residential/property-', 'id') })),
                 width: innerWidth,
                 height: innerHeight - 60,
-                getX,
-                getY,
+                getX: getSaleableArea,
+                getY: getRent,
                 xLabel: '平方呎',
                 yLabel: '月租',
                 yTickFormat: '$,',
                 resetBtnSelector: '#reset-btn',
-                pointRadius: 16,
+                pointRadius: (d) => 16 * getSaleableArea(d) / d3.max(data, getSaleableArea),
                 tooltipHtml: (d) => {
-                    const saleableArea = getX(d);
-                    const rent = getY(d);
+                    const saleableArea = getSaleableArea(d);
+                    const rent = getRent(d);
                     const rentPerSq = (rent / saleableArea).toFixed(0);
                     const { detail_url, thumbnailurl: thumbnail_url, building_name } = d;
 
@@ -87,7 +87,7 @@
                 getX = (d) => d[0],
                 getY = (d) => d[1],
                 resetBtnSelector,
-                pointRadius = 4,
+                pointRadius,
                 tooltipHtml,
                 regressionLegend,
                 xLabel = '',
@@ -98,7 +98,9 @@
                 this.getX = getX;
                 this.getY = getY;
                 this.data = data;
-                this.pointRadius = pointRadius;
+                this.pointRadius = pointRadius || function (d) {
+                    return 4;
+                };
                 this.selector = selector;
                 this.xLabel = xLabel;
                 this.yLabel = yLabel;
@@ -277,7 +279,7 @@
                         .attr('target', '_blank')
                         .attr('href', (d) => d.detail_url)
                         .append("circle")
-                        .attr("r", self.pointRadius)
+                        .attr("r", (d) => self.pointRadius(d))
                         .style("fill", "#61a3a9")
                         .style("opacity", 0.5)
                         .on("mouseover", function (d) {
@@ -285,8 +287,8 @@
 
                             self.oneTimeTooltip = self.createTooltip();
                             self.relocateTooltip(
-                                self.x(self.getX(d) + self.pointRadius),
-                                self.y(self.getY(d) - self.pointRadius),
+                                self.x(self.getX(d) + self.pointRadius(d)),
+                                self.y(self.getY(d) - self.pointRadius(d)),
                                 self.oneTimeTooltip,
                             );
                             self.writeTooltip(self.tooltipHtml(d), self.oneTimeTooltip);
