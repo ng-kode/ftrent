@@ -66,11 +66,12 @@
                             <img src="${thumbnail_url}" class="card-img-top" style="max-height: 180px; width: auto;" alt="thumbnail_${building_name}">
                             <div class="card-body">
                                 <h5 class="card-title">${building_name}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">$${rentPerSq}@呎</h6>
                                 <p class="card-text">
-                                    ${saleableArea.toLocaleString('en')}呎,
-                                    月租$${rent.toLocaleString('en')}
-                                    （$${rentPerSq}@呎）
+                                    ${saleableArea.toLocaleString('en')}呎, 月租$${rent.toLocaleString('en')}
                                 </p>
+                                <a href="#" class="card-link">Card link</a>
+                                <a href="#" class="card-link">Another link</a>
                             </div>
                         </div>
                     `;
@@ -101,15 +102,15 @@
                 this.getX = getX;
                 this.getY = getY;
                 this.data = data;
-                this.pointRadius = pointRadius || function (d) {
-                    return 4;
-                };
                 this.selector = selector;
                 this.xLabel = xLabel;
                 this.yLabel = yLabel;
                 this.xTickFormat = xTickFormat;
                 this.yTickFormat = yTickFormat;
-
+                this.selectedPoints = {};
+                this.pointRadius = pointRadius || function (d) {
+                    return 4;
+                };
                 this.tooltipHtml = tooltipHtml || function (d) {
                     return `${this.getX(d)}, ${this.getY(d)}`;
                 };
@@ -278,16 +279,12 @@
                         .selectAll("circle")
                         .data(self.data)
                         .enter()
-                        .append('a')
-                        .attr('target', '_blank')
-                        .attr('href', (d) => d.detail_url)
                         .append("circle")
                         .attr("r", (d) => self.pointRadius(d))
                         .style("fill", "#61a3a9")
                         .style("opacity", 0.5)
                         .on("mouseover", function (d) {
                             d3.select(this).style('fill', 'red');
-
                             self.oneTimeTooltip = self.createTooltip();
                             self.relocateTooltip(
                                 self.x(self.getX(d) + self.pointRadius(d)),
@@ -297,8 +294,25 @@
                             self.writeTooltip(self.tooltipHtml(d), self.oneTimeTooltip);
                         })
                         .on("mouseout", function (d) {
-                            self.removeTooltip(self.oneTimeTooltip);
                             d3.select(this).style('fill', '#61a3a9');
+                            self.removeTooltip(self.oneTimeTooltip);
+                        })
+                        .on('click', (d) => {
+                            const { id } = d
+                            if (self.selectedPoints[id]) {
+                                return;
+                            }
+                            const tooltip = self.createTooltip();
+                            self.relocateTooltip(
+                                self.x(self.getX(d) + self.pointRadius(d)),
+                                self.y(self.getY(d) - self.pointRadius(d)),
+                                tooltip,
+                            );
+                            self.writeTooltip(self.tooltipHtml(d), tooltip);
+                            self.selectedPoints[id] = {
+                                data: d,
+                                tooltip,
+                            }
                         });
                 }
 
@@ -306,6 +320,15 @@
                     .selectAll("circle")
                     .attr('cx', (d) => self.x(self.getX(d)))
                     .attr('cy', (d) => self.y(self.getY(d)));
+
+                Object.keys(self.selectedPoints).forEach((id) => {
+                    const { tooltip, data } = self.selectedPoints[id];
+                    self.relocateTooltip(
+                        self.x(self.getX(data) + self.pointRadius(data)),
+                        self.y(self.getY(data) - self.pointRadius(data)),
+                        tooltip,
+                    );
+                });
             }
 
             drawRegressionLine = () => {
