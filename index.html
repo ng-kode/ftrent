@@ -28,10 +28,19 @@
         .grid line {
             stroke-opacity: 0.7;
         }
+
+        .ftrent.btn-close {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
     </style>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"
+        integrity="sha512-UNM1njAgOFUa74Z0bADwAq8gbTcqZC8Ej4xPSzpnh0l6KMevwvkBvbldF9uR++qKeJ+MOZHRjV1HZjoRvjDfNQ=="
+        crossorigin="anonymous"></script>
 </head>
 
 <body>
@@ -234,31 +243,6 @@
                     .text(this.yLabel);
             }
 
-            createTooltip = () => {
-                const g = this.g.append('g')
-                    .attr('class', 'ftrent-tooltip');
-
-                const div = g.append('foreignObject')
-                    .attr('width', '100%')
-                    .attr('height', '100%');
-
-                return { g, div }
-            }
-
-            relocateTooltip = (x, y, tooltip) => {
-                tooltip
-                    .g
-                    .attr('transform', `translate(${x}, ${y})`);
-            }
-
-            writeTooltip = (htmlString, tooltip) => {
-                tooltip.div.html(htmlString);
-            }
-
-            removeTooltip = (tooltip) => {
-                tooltip.g.remove();
-            }
-
             drawScatter = () => {
                 const self = this;
 
@@ -285,30 +269,28 @@
                         .style("opacity", 0.5)
                         .on("mouseover", function (d) {
                             d3.select(this).style('fill', 'red');
-                            self.oneTimeTooltip = self.createTooltip();
-                            self.relocateTooltip(
-                                self.x(self.getX(d) + self.pointRadius(d)),
-                                self.y(self.getY(d) - self.pointRadius(d)),
-                                self.oneTimeTooltip,
+                            self.oneTimeTooltip = new ScatterTooltip(self.g);
+                            self.oneTimeTooltip.relocate(
+                                self.x(self.getX(d)),
+                                self.y(self.getY(d)),
                             );
-                            self.writeTooltip(self.tooltipHtml(d), self.oneTimeTooltip);
+                            self.oneTimeTooltip.write(self.tooltipHtml(d));
                         })
                         .on("mouseout", function (d) {
                             d3.select(this).style('fill', '#61a3a9');
-                            self.removeTooltip(self.oneTimeTooltip);
+                            self.oneTimeTooltip.remove();
                         })
                         .on('click', (d) => {
                             const { id } = d
                             if (self.selectedPoints[id]) {
                                 return;
                             }
-                            const tooltip = self.createTooltip();
-                            self.relocateTooltip(
-                                self.x(self.getX(d) + self.pointRadius(d)),
-                                self.y(self.getY(d) - self.pointRadius(d)),
-                                tooltip,
+                            const tooltip = new ScatterTooltip(self.g);
+                            tooltip.relocate(
+                                self.x(self.getX(d)),
+                                self.y(self.getY(d)),
                             );
-                            self.writeTooltip(self.tooltipHtml(d), tooltip);
+                            tooltip.write(self.tooltipHtml(d));
                             self.selectedPoints[id] = {
                                 data: d,
                                 tooltip,
@@ -323,10 +305,9 @@
 
                 Object.keys(self.selectedPoints).forEach((id) => {
                     const { tooltip, data } = self.selectedPoints[id];
-                    self.relocateTooltip(
-                        self.x(self.getX(data) + self.pointRadius(data)),
-                        self.y(self.getY(data) - self.pointRadius(data)),
-                        tooltip,
+                    tooltip.relocate(
+                        self.x(self.getX(data)),
+                        self.y(self.getY(data)),
                     );
                 });
             }
@@ -383,6 +364,38 @@
                 return function (x) {
                     return x * this.slope + this.intercept
                 }
+            }
+        }
+
+        class ScatterTooltip {
+            constructor(d3Selection) {
+                this.g = d3Selection
+                    .append('g')
+                    .attr('class', 'ftrent-tooltip');
+                this.div = this.g.append('foreignObject')
+                    .attr('width', '100%')
+                    .attr('height', '100%');
+            }
+
+            relocate = (x, y) => {
+                this.g.attr('transform', `translate(${x}, ${y})`);
+            }
+
+            write = (htmlString) => {
+                const closeBtnId = uuid.v4();
+                this.div.html(
+                    `
+                        ${htmlString}
+                        <button id="${closeBtnId}" type="button" class="ftrent btn-close" aria-label="Close"></button>
+                    `
+                );
+                document.getElementById(closeBtnId).addEventListener('click', () => {
+                    this.remove();
+                });
+            }
+
+            remove = () => {
+                this.g.remove();
             }
         }
     </script>
