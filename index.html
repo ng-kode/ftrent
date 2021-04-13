@@ -276,7 +276,7 @@
                     .append("circle")
                     .attr("cx", (d) => self.x(self.getX(d)))
                     .attr("cy", (d) => self.y(self.getY(d)))
-                    .attr("r", (d) => self.pointRadius * self.getY(d) / d3.max(self.data, self.getY))
+                    .attr("r", self.pointRadius)
                     .style("fill", "#61a3a9")
                     .style("opacity", 0.5)
                     .on("mouseover", function (d) {
