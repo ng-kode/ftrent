@@ -89,6 +89,7 @@
                 resetBtnSelector,
                 pointRadius = 4,
                 tooltipHtml,
+                regressionLegend,
                 xLabel = '',
                 yLabel = '',
                 xTickFormat = ',',
@@ -99,13 +100,17 @@
                 this.data = data;
                 this.pointRadius = pointRadius;
                 this.selector = selector;
-                this.tooltipHtml = tooltipHtml || function (d) {
-                    return `${this.getX(d)}, ${this.getY(d)}`;
-                };
                 this.xLabel = xLabel;
                 this.yLabel = yLabel;
                 this.xTickFormat = xTickFormat;
                 this.yTickFormat = yTickFormat;
+
+                this.tooltipHtml = tooltipHtml || function (d) {
+                    return `${this.getX(d)}, ${this.getY(d)}`;
+                };
+                this.regressionLegend = regressionLegend || function () {
+                    return `y = ${this.slope.toFixed(2)}x + ${this.intercept.toFixed(2)}`
+                }
 
                 this.margin = { top: 10, right: 30, bottom: 60, left: 120 };
                 this.width = overallWidth -= (this.margin.left + this.margin.right);
@@ -312,7 +317,8 @@
                             .attr("y", this.height * 0.8)
                             .attr("x", this.width * 0.8)
                             .attr('text-anchor', 'middle')
-                            .text(this.slope);
+                            .style('fill', 'lightcoral')
+                            .text(this.regressionLegend(this.slope, this.intercept));
                 } else {
                     this.regressionLine.attr("d", line(this.data));
                 }
@@ -335,11 +341,11 @@
                     .reduce(ReduceAddition);
 
                 this.slope = MeanDiffXY / SquareXX;
-                var intercept = yBar - (xBar * this.slope);
+                this.intercept = yBar - (xBar * this.slope);
 
                 // returning regression function
                 return function (x) {
-                    return x * this.slope + intercept
+                    return x * this.slope + this.intercept
                 }
             }
         }
