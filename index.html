@@ -139,13 +139,13 @@
                         // TODO: any action here
                     });
 
-                this.createAxis();
+                this.drawAxis();
 
                 this.addAxisLabels();
 
-                this.createScatter();
+                this.drawScatter();
 
-                this.redrawRegressionLine();
+                this.drawRegressionLine();
 
                 const zoom = d3.zoom().on("zoom", this.zoomed);
 
@@ -164,50 +164,51 @@
                 this.x = transform.rescaleX(this.originalX);
                 this.y = transform.rescaleY(this.originalY);
 
+                this.drawAxis();
+
+                this.drawScatter();
+
+                this.drawRegressionLine();
+            }
+
+            drawAxis = () => {
+                if (!this.originalX) {
+                    this.originalX = d3.scaleLinear()
+                        .domain([0, d3.max(this.data, this.getX) * 1.1])
+                        .range([0, this.width]);
+                }
+                if (!this.x) {
+                    this.x = this.originalX;
+                }
+                if (!this.xAxis) {
+                    this.xAxis = this.g.append("g")
+                        .attr("class", "grid")
+                        .attr("transform", "translate(0," + this.height + ")")
+                }
                 this.xAxis.call(d3.axisBottom(this.x)
                     .ticks(5)
                     .tickFormat(d3.format(this.xTickFormat))
                     .tickSize(-this.height)
                 );
+
+                if (!this.originalY) {
+                    this.originalY = d3.scaleLinear()
+                        .domain([0, d3.max(this.data, this.getY) * 1.1])
+                        .range([this.height, 0]);
+                }
+                if (!this.y) {
+                    this.y = this.originalY;
+                }
+                if (!this.yAxis) {
+
+                    this.yAxis = this.g.append("g")
+                        .attr("class", "grid")
+                }
                 this.yAxis.call(d3.axisLeft(this.y)
                     .ticks(5)
                     .tickFormat(d3.format(this.yTickFormat))
                     .tickSize(-this.width)
                 );
-
-                this.scatter
-                    .selectAll("circle")
-                    .attr('cx', (d) => this.x(this.getX(d)))
-                    .attr('cy', (d) => this.y(this.getY(d)));
-
-                this.redrawRegressionLine();
-            }
-
-            createAxis = () => {
-                this.originalX = d3.scaleLinear()
-                    .domain([0, d3.max(this.data, this.getX) * 1.1])
-                    .range([0, this.width]);
-                this.x = this.originalX;
-                this.xAxis = this.g.append("g")
-                    .attr("class", "grid")
-                    .attr("transform", "translate(0," + this.height + ")")
-                    .call(d3.axisBottom(this.x)
-                        .ticks(5)
-                        .tickFormat(d3.format(this.xTickFormat))
-                        .tickSize(-this.height)
-                    );
-
-                this.originalY = d3.scaleLinear()
-                    .domain([0, d3.max(this.data, this.getY) * 1.1])
-                    .range([this.height, 0]);
-                this.y = this.originalY;
-                this.yAxis = this.g.append("g")
-                    .attr("class", "grid")
-                    .call(d3.axisLeft(this.y)
-                        .ticks(5)
-                        .tickFormat(d3.format(this.yTickFormat))
-                        .tickSize(-this.width)
-                    );
             }
 
             addAxisLabels = () => {
@@ -252,7 +253,7 @@
                 tooltip.g.remove();
             }
 
-            createScatter = () => {
+            drawScatter = () => {
                 const self = this;
 
                 self.g.append("defs").append("SVG:clipPath")
@@ -263,40 +264,46 @@
                     .attr("x", 0)
                     .attr("y", 0);
 
-                self.scatter = self.g.append("g")
-                    .attr("clip-path", "url(#clip)")
-                    .attr("class", "scatter");
+                if (!self.scatter) {
+                    self.scatter = self.g.append("g")
+                        .attr("clip-path", "url(#clip)")
+                        .attr("class", "scatter");
 
-                self.scatter.selectAll("circle")
-                    .data(self.data)
-                    .enter()
-                    .append('a')
-                    .attr('target', '_blank')
-                    .attr('href', (d) => d.detail_url)
-                    .append("circle")
-                    .attr("cx", (d) => self.x(self.getX(d)))
-                    .attr("cy", (d) => self.y(self.getY(d)))
-                    .attr("r", self.pointRadius)
-                    .style("fill", "#61a3a9")
-                    .style("opacity", 0.5)
-                    .on("mouseover", function (d) {
-                        d3.select(this).style('fill', 'red');
+                    self.scatter
+                        .selectAll("circle")
+                        .data(self.data)
+                        .enter()
+                        .append('a')
+                        .attr('target', '_blank')
+                        .attr('href', (d) => d.detail_url)
+                        .append("circle")
+                        .attr("r", self.pointRadius)
+                        .style("fill", "#61a3a9")
+                        .style("opacity", 0.5)
+                        .on("mouseover", function (d) {
+                            d3.select(this).style('fill', 'red');
 
-                        self.oneTimeTooltip = self.createTooltip();
-                        self.relocateTooltip(
-                            self.x(self.getX(d) + self.pointRadius),
-                            self.y(self.getY(d) - self.pointRadius),
-                            self.oneTimeTooltip,
-                        );
-                        self.writeTooltip(self.tooltipHtml(d), self.oneTimeTooltip);
-                    })
-                    .on("mouseout", function (d) {
-                        self.removeTooltip(self.oneTimeTooltip);
-                        d3.select(this).style('fill', '#61a3a9');
-                    });
+                            self.oneTimeTooltip = self.createTooltip();
+                            self.relocateTooltip(
+                                self.x(self.getX(d) + self.pointRadius),
+                                self.y(self.getY(d) - self.pointRadius),
+                                self.oneTimeTooltip,
+                            );
+                            self.writeTooltip(self.tooltipHtml(d), self.oneTimeTooltip);
+                        })
+                        .on("mouseout", function (d) {
+                            self.removeTooltip(self.oneTimeTooltip);
+                            d3.select(this).style('fill', '#61a3a9');
+                        });
+                }
+
+                self.scatter
+                    .selectAll("circle")
+                    .attr('cx', (d) => self.x(self.getX(d)))
+                    .attr('cy', (d) => self.y(self.getY(d)));
             }
 
-            redrawRegressionLine = () => {
+            drawRegressionLine = () => {
                 if (!this.regression) {
                     this.regression = this.OLS(this.data.map(this.getX), this.data.map(this.getY));
                 }
@@ -314,11 +321,11 @@
                         .attr('stroke-width', 4);
 
                     this.g.append("text")
-                            .attr("y", this.height * 0.8)
-                            .attr("x", this.width * 0.8)
-                            .attr('text-anchor', 'middle')
-                            .style('fill', 'lightcoral')
-                            .text(this.regressionLegend(this.slope, this.intercept));
+                        .attr("y", this.height * 0.8)
+                        .attr("x", this.width * 0.8)
+                        .attr('text-anchor', 'middle')
+                        .style('fill', 'lightcoral')
+                        .text(this.regressionLegend(this.slope, this.intercept));
                 } else {
                     this.regressionLine.attr("d", line(this.data));
                 }
