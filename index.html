@@ -60,8 +60,9 @@
 
 <body>
 
-    <button class="btn btn-outline-warning" id="reset-btn">
-        <i class="fas fa-undo-alt"></i> Reset
+    <button class="btn btn-outline-warning" id="reset-btn"
+        style="border-radius: 10rem !important; position: absolute; bottom: 12rem; right: 6rem;">
+        <i class="fas fa-expand-arrows-alt"></i> Reset Scale
     </button>
 
     <script src="https://d3js.org/d3.v4.js"></script>
@@ -344,13 +345,13 @@
                         .style('opacity', 0.9)
                         .attr('stroke-width', 4);
 
-                    this.g.append("text")
-                        .attr("y", this.height * 0.8)
-                        .attr("x", this.width * 0.8)
-                        .attr('text-anchor', 'middle')
-                        .style('fill', 'lightcoral')
-                        .style('font-size', 20)
-                        .text(this.regressionLegend(this.slope, this.intercept));
+                    // this.g.append("text")
+                    //     .attr("y", this.height * 0.8)
+                    //     .attr("x", this.width * 0.8)
+                    //     .attr('text-anchor', 'middle')
+                    //     .style('fill', 'lightcoral')
+                    //     .style('font-size', 20)
+                    //     .text(this.regressionLegend(this.slope, this.intercept));
                 } else {
                     this.regressionLine.attr("d", line(this.data));
                 }
