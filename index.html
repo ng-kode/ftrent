@@ -282,10 +282,7 @@
                         .on("mouseover", function (d) {
                             d3.select(this).style('fill', 'red');
                             self.oneTimeTooltip = new ScatterTooltip(self.g);
-                            self.oneTimeTooltip.relocate(
-                                self.x(self.getX(d)),
-                                self.y(self.getY(d)),
-                            );
+                            positionTooltip(self.oneTimeTooltip, d);
                             self.oneTimeTooltip.write(self.tooltipHtml(d));
                         })
                         .on("mouseout", function (d) {
@@ -298,10 +295,7 @@
                                 return;
                             }
                             const tooltip = new ScatterTooltip(self.g);
-                            tooltip.relocate(
-                                self.x(self.getX(d)),
-                                self.y(self.getY(d)),
-                            );
+                            positionTooltip(tooltip, d);
                             tooltip.write(self.tooltipHtml(d));
                             self.selectedPoints[id] = {
                                 data: d,
@@ -317,11 +311,15 @@
 
                 Object.keys(self.selectedPoints).forEach((id) => {
                     const { tooltip, data } = self.selectedPoints[id];
-                    tooltip.relocate(
-                        self.x(self.getX(data)),
-                        self.y(self.getY(data)),
-                    );
+                    positionTooltip(tooltip, data);
                 });
+
+                function positionTooltip(tooltip, data) {
+                    tooltip.relocate(
+                        self.x(self.getX(data)) + 10,
+                        self.y(self.getY(data)) + 10,
+                    );
+                }
             }
 
             drawRegressionLine = () => {
