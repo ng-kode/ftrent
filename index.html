@@ -98,7 +98,7 @@
                     `;
                 },
                 regressionLegend: (slope, intercept) => {
-                    return `平均呎價$${d3.median(data, d => getRent(d) / getSaleableArea(d)).toFixed(1)}`;
+                    return `土瓜灣平均呎價: $${d3.median(data, d => getRent(d) / getSaleableArea(d)).toFixed(1)}`;
                 }
             });
         })
