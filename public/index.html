@@ -133,11 +133,15 @@
                 title = '',
                 primaryColor = '#61a3a9',
                 secondaryColor = 'lightcoral',
+                skipOutlierY = true,
             }) {
                 this.title = title;
                 this.getX = getX;
                 this.getY = getY;
-                this.data = data;
+                const yMedian = d3.median(data, getY);
+                const yStd = d3.deviation(data, getY);
+                const yMax = yMedian + 2 * yStd;
+                this.data = skipOutlierY ? data.filter((d) => getY(d) <= yMax) : data;
                 this.selector = selector;
                 this.xLabel = xLabel;
                 this.yLabel = yLabel;
