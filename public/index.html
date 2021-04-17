@@ -55,7 +55,7 @@
 <body>
     <script src="https://d3js.org/d3.v4.js"></script>
     <script>
-        d3.csv('/kw_hunghom_cleaned.csv', function (data) {
+        d3.csv('./kw_hunghom_cleaned.csv', function (data) {
             window.data=data;
             const getSaleableArea = (d) => parseInt(d.saleable_area)
             const getRent = (d) => parseInt(d.rent);
