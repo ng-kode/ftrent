@@ -96,11 +96,11 @@
                             <div class="card-body">
                                 <h5 class="card-title">${building_name}</h5>
                                 <h6 class="card-subtitle mb-2 text-muted">
-                                    樓齡${parseInt(d.estate_age)}年, ${d.is_studio === "True" ? '開放式設計' : `${parseInt(d.bedroom)}房`}
+                                    刊登日期 ${d.created_at}
                                 </h6>
                                 <p class="card-text">
-                                    ${saleableArea.toLocaleString('en')}呎, 月租$${rent.toLocaleString('en')} ($${rentPerSq}@呎)
-
+                                    ${saleableArea.toLocaleString('en')}呎, 月租$${rent.toLocaleString('en')} ($${rentPerSq}@呎) <br/>
+                                    ${d.is_studio === "True" ? '開放式設計' : `${parseInt(d.bedroom)}房`}, 樓齡 ${parseInt(d.estate_age)}年 <br/>
                                 </p>
                             </div>
                         </div>
