@@ -37,10 +37,6 @@
             stroke-opacity: 0.7;
         }
 
-        .scatter circle:hover {
-            cursor: pointer;
-        }
-
         .hover-pointer:hover {
             cursor: pointer;
         }
@@ -91,10 +87,10 @@
                                 <p class="card-text">
                                     ${saleableArea.toLocaleString('en')}呎, 月租$${rent.toLocaleString('en')}
                                 </p>
-                                <a href="${detail_url}" target="_blank" class="card-link">查看</a>
                             </div>
                         </div>
                     `;
+                    // <a href="${detail_url}" target="_blank" class="card-link">查看</a>
                 },
             });
         })
@@ -291,6 +287,9 @@
                         .selectAll("circle")
                         .data(self.data)
                         .enter()
+                        .append('a')
+                        .attr('target', '_blank')
+                        .attr('href', (d) => d.detail_url)
                         .append("circle")
                         .attr("r", (d) => self.pointRadius(d))
                         .style("fill", self.primaryColor)
