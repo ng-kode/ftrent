@@ -64,7 +64,7 @@
                 selector: 'body',
                 data: data.map(d => ({ ...d, id: d.detail_url.replace('https://www.28hse.com/rent/residential/property-', 'id') })),
                 width: innerWidth,
-                height: innerHeight - 60,
+                height: innerHeight - 6,
                 getX: getSaleableArea,
                 getY: getRent,
                 xLabel: '平方呎',
@@ -155,7 +155,7 @@
                     return `${this.getX(d)}, ${this.getY(d)}`;
                 };
 
-                this.margin = { top: 10, right: 30, bottom: 60, left: 120 };
+                this.margin = { top: 1, right: 3, bottom: 6, left: 12 };
                 this.width = overallWidth - (this.margin.left + this.margin.right);
                 this.height = overallHeight - (this.margin.top + this.margin.bottom);
 
@@ -202,7 +202,7 @@
 
                 this.drawRegressionLine();
 
-                this.addLegend();
+                // this.addLegend();
 
                 const zoom = d3.zoom().on("zoom", this.zoomed);
 
@@ -249,6 +249,7 @@
                     .tickFormat(d3.format(this.xTickFormat))
                     .tickSize(-this.height)
                 );
+                this.xAxis.selectAll('text').attr('dy', -1 * this.margin.bottom);
 
                 if (!this.originalY) {
                     this.originalY = d3.scaleLinear()
@@ -268,13 +269,16 @@
                     .tickFormat(d3.format(this.yTickFormat))
                     .tickSize(-this.width)
                 );
+                this.yAxis.selectAll('text').attr('x', function () {
+                    return (this.getAttribute('x') || -3) * -20;
+                })
             }
 
             addAxisLabels = () => {
                 this.g.append("text")
                     .attr("transform",
                         "translate(" + (this.width / 2) + " ," +
-                        (this.height + this.margin.top + this.margin.bottom / 2) + ")")
+                        (this.height + this.margin.top) + ")")
                     .style("text-anchor", "middle")
                     .text(this.xLabel);
 
