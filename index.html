@@ -59,7 +59,7 @@
         d3.csv('/kw_hunghom_cleaned.csv', function (data) {
             const getSaleableArea = (d) => parseInt(d.saleable_area)
             const getRent = (d) => parseInt(d.rent);
-            new ScatterPlot({
+            const makePlot = () => new ScatterPlot({
                 selector: 'body',
                 data: data.map(d => ({ ...d, id: d.detail_url.replace('https://www.28hse.com/rent/residential/property-', 'id') })),
                 width: innerWidth,
@@ -93,6 +93,13 @@
                     // <a href="${detail_url}" target="_blank" class="card-link">查看</a>
                 },
             });
+
+            let plot = makePlot();
+            window.addEventListener('resize', onResize);
+            function onResize() {
+                plot.remove();
+                plot = makePlot();
+            }
         })
 
         class ScatterPlot {
@@ -187,6 +194,8 @@
                         zoom.transform(this.g, d3.zoomIdentity);
                     });
                 }
+
+                return svg;
             }
 
             zoomed = () => {
