@@ -134,6 +134,7 @@
                 this.yTickFormat = yTickFormat;
                 this.selectedPoints = {};
                 this.primaryColor = '#61a3a9';
+                this.secondaryColor = 'lightcoral';
                 this.pointRadius = pointRadius || function (d) {
                     return 4;
                 };
@@ -290,13 +291,17 @@
                         .style("fill", self.primaryColor)
                         .style("opacity", 0.5)
                         .on("mouseover", function (d) {
-                            d3.select(this).style('fill', 'red');
+                            d3.select(this)
+                                .style('fill', self.secondaryColor)
+                                .style('opacity', 1);
                             self.oneTimeTooltip = new ScatterTooltip(self.g);
                             positionTooltip(self.oneTimeTooltip, d);
                             self.oneTimeTooltip.write(self.tooltipHtml(d));
                         })
                         .on("mouseout", function (d) {
-                            d3.select(this).style('fill', self.primaryColor);
+                            d3.select(this)
+                                .style('fill', self.primaryColor)
+                                .style('opacity', 0.9);
                             self.oneTimeTooltip.remove();
                         })
                         .on('click', (d) => {
@@ -345,7 +350,7 @@
                     this.regressionLine = this.g
                         .append("path")
                         .attr("d", line(this.data))
-                        .attr("stroke", "lightcoral")
+                        .attr("stroke", this.secondaryColor)
                         .style('opacity', 0.9)
                         .attr('stroke-width', 4);
                 } else {
