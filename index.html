@@ -103,9 +103,6 @@
                         </div>
                     `;
                 },
-                regressionLegend: (slope, intercept) => {
-                    return `土瓜灣平均呎價: $${d3.median(data, d => getRent(d) / getSaleableArea(d)).toFixed(1)}`;
-                }
             });
         })
 
@@ -120,7 +117,6 @@
                 resetBtnSelector,
                 pointRadius,
                 tooltipHtml,
-                regressionLegend,
                 xLabel = '',
                 yLabel = '',
                 xTickFormat = ',',
@@ -141,9 +137,6 @@
                 this.tooltipHtml = tooltipHtml || function (d) {
                     return `${this.getX(d)}, ${this.getY(d)}`;
                 };
-                this.regressionLegend = regressionLegend || function () {
-                    return `y = ${this.slope.toFixed(2)}x + ${this.intercept.toFixed(2)}`
-                }
 
                 this.margin = { top: 10, right: 30, bottom: 60, left: 120 };
                 this.width = overallWidth -= (this.margin.left + this.margin.right);
@@ -344,14 +337,6 @@
                         .attr("stroke", "lightcoral")
                         .style('opacity', 0.9)
                         .attr('stroke-width', 4);
-
-                    // this.g.append("text")
-                    //     .attr("y", this.height * 0.8)
-                    //     .attr("x", this.width * 0.8)
-                    //     .attr('text-anchor', 'middle')
-                    //     .style('fill', 'lightcoral')
-                    //     .style('font-size', 20)
-                    //     .text(this.regressionLegend(this.slope, this.intercept));
                 } else {
                     this.regressionLine.attr("d", line(this.data));
                 }
