@@ -60,11 +60,6 @@
 
 <body>
 
-    <button class="btn btn-outline-warning" id="reset-btn"
-        style="border-radius: 10rem !important; position: absolute; bottom: 12rem; right: 6rem;">
-        <i class="fas fa-expand-arrows-alt"></i> Reset Scale
-    </button>
-
     <script src="https://d3js.org/d3.v4.js"></script>
     <script>
         d3.csv('/kw_hunghom_cleaned.csv', function (data) {
@@ -168,6 +163,18 @@
                         if (d3.event.defaultPrevented) return; // zoomed
                         // TODO: any action here
                     });
+
+                d3.select(selector)
+                    .append('button')
+                    .attr('class', 'btn btn-outline-warning')
+                    .attr('id', 'reset-btn')
+                    .style('border-radius', '10rem !important')
+                    .style('position', 'absolute')
+                    .style('bottom', '12rem')
+                    .style('right', '6rem')
+                    .append('i')
+                    .attr('class', 'fas fa-expand-arrows-alt')
+                    .html(' Reset Scale');
 
                 this.drawAxis();
 
