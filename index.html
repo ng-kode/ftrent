@@ -41,10 +41,8 @@
             cursor: pointer;
         }
 
-        .ftrent.btn-close {
-            position: absolute;
-            top: 0;
-            right: 0;
+        .hover-pointer:hover {
+            cursor: pointer;
         }
     </style>
 
@@ -411,9 +409,10 @@
                     `
                         <div style="position: relative;">
                             ${htmlString}
-                            <button id="${closeBtnId}" type="button" class="ftrent btn-close" aria-label="Close"></button>
+                            <i style="position: absolute; top: 0; right: 0;" id="${closeBtnId}" class="far fa-times-circle hover-pointer"></i>
                         </div>
                     `
+                    // <button id="${closeBtnId}" type="button" class="btn btn-sm btn-outline-warning" style="position: absolute; top: 0; right: 0;">
                 );
                 document.getElementById(closeBtnId).addEventListener('click', () => {
                     this.remove();
