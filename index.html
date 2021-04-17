@@ -53,12 +53,13 @@
 </head>
 
 <body>
-
     <script src="https://d3js.org/d3.v4.js"></script>
     <script>
         d3.csv('/kw_hunghom_cleaned.csv', function (data) {
+            window.data=data;
             const getSaleableArea = (d) => parseInt(d.saleable_area)
             const getRent = (d) => parseInt(d.rent);
+            const lastCrawledAt = new Date(parseFloat(data[0].last_crawl) * 1000).toLocaleString('zh-HK');
             const makePlot = () => new ScatterPlot({
                 selector: 'body',
                 data: data.map(d => ({ ...d, id: d.detail_url.replace('https://www.28hse.com/rent/residential/property-', 'id') })),
@@ -72,6 +73,18 @@
                 resetBtnSelector: '#reset-btn',
                 title: '紅磡區租盤',
                 pointRadius: (d) => 16 * getSaleableArea(d) / d3.max(data, getSaleableArea),
+                legendHtml: `
+                    <div class="card-body">
+                        <h5 class="card-title" style="font-size: 2rem;">紅磡區租盤</h5>
+                        <h6 class="card-subtitle mb-2 text-muted" style="font-size: 1.2rem;">最後更新: ${lastCrawledAt}</h6>
+                        <p class="card-text" style="font-size: 1.4rem;">
+                            <span style='color: #61a3a9;'> 租盤數目：${data.length}個 <i class="fas fa-circle"></i></span>
+                            <br />
+                            <span style='color: lightcoral;'>平均呎價：$${d3.median(data, d => getRent(d) / getSaleableArea(d)).toFixed(1)} <i class="fas fa-chart-line"></i></span>
+
+                        </p>
+                    </div>
+                `,
                 tooltipHtml: (d) => {
                     const saleableArea = getSaleableArea(d);
                     const rent = getRent(d);
@@ -112,12 +125,15 @@
                 getY = (d) => d[1],
                 resetBtnSelector,
                 pointRadius,
+                legendHtml,
                 tooltipHtml,
                 xLabel = '',
                 yLabel = '',
                 xTickFormat = ',',
                 yTickFormat = ',',
-                title = 'Zoom-able scatter plot',
+                title = '',
+                primaryColor = '#61a3a9',
+                secondaryColor = 'lightcoral',
             }) {
                 this.title = title;
                 this.getX = getX;
@@ -129,11 +145,12 @@
                 this.xTickFormat = xTickFormat;
                 this.yTickFormat = yTickFormat;
                 this.selectedPoints = {};
-                this.primaryColor = '#61a3a9';
-                this.secondaryColor = 'lightcoral';
+                this.primaryColor = primaryColor;
+                this.secondaryColor = secondaryColor;
                 this.pointRadius = pointRadius || function (d) {
                     return 4;
                 };
+                this.legendHtml = legendHtml;
                 this.tooltipHtml = tooltipHtml || function (d) {
                     return `${this.getX(d)}, ${this.getY(d)}`;
                 };
@@ -184,6 +201,8 @@
                 this.drawScatter();
 
                 this.drawRegressionLine();
+
+                this.addLegend();
 
                 const zoom = d3.zoom().on("zoom", this.zoomed);
 
@@ -249,14 +268,6 @@
                     .tickFormat(d3.format(this.yTickFormat))
                     .tickSize(-this.width)
                 );
-
-                this.g.append("text")
-                    .attr("x", (this.width / 2))
-                    .attr("y", this.margin.top + 36)
-                    .attr("text-anchor", "middle")
-                    .text(this.title)
-                    .style('font-size', 32)
-                    .style('fill', this.primaryColor);
             }
 
             addAxisLabels = () => {
@@ -348,6 +359,20 @@
                         self.y(self.getY(data)) + 10,
                     );
                 }
+            }
+
+            addLegend = () => {
+                if (!this.legendHtml) {
+                    return;
+                }
+                d3.select(this.selector)
+                    .append('div')
+                    .attr('class', 'card')
+                    .style('position', 'absolute')
+                    .style('top', '4rem')
+                    .style('left', '16rem')
+                    .style('width', '22rem')
+                    .html(this.legendHtml);
             }
 
             drawRegressionLine = () => {
