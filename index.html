@@ -67,7 +67,7 @@
 
     <script src="https://d3js.org/d3.v4.js"></script>
     <script>
-        d3.csv('/24_tokwawan_cleaned.csv', function (data) {
+        d3.csv('/kw_hunghom_cleaned.csv', function (data) {
             const getSaleableArea = (d) => parseInt(d.saleable_area)
             const getRent = (d) => parseInt(d.rent);
             new ScatterPlot({
@@ -81,6 +81,7 @@
                 yLabel: '月租',
                 yTickFormat: '$,',
                 resetBtnSelector: '#reset-btn',
+                title: '紅磡區租盤',
                 pointRadius: (d) => 16 * getSaleableArea(d) / d3.max(data, getSaleableArea),
                 tooltipHtml: (d) => {
                     const saleableArea = getSaleableArea(d);
@@ -97,8 +98,7 @@
                                 <p class="card-text">
                                     ${saleableArea.toLocaleString('en')}呎, 月租$${rent.toLocaleString('en')}
                                 </p>
-                                <a href="#" class="card-link">Card link</a>
-                                <a href="#" class="card-link">Another link</a>
+                                <a href="${detail_url}" target="_blank" class="card-link">查看</a>
                             </div>
                         </div>
                     `;
@@ -121,7 +121,9 @@
                 yLabel = '',
                 xTickFormat = ',',
                 yTickFormat = ',',
+                title = 'Zoom-able scatter plot',
             }) {
+                this.title = title;
                 this.getX = getX;
                 this.getY = getY;
                 this.data = data;
@@ -131,6 +133,7 @@
                 this.xTickFormat = xTickFormat;
                 this.yTickFormat = yTickFormat;
                 this.selectedPoints = {};
+                this.primaryColor = '#61a3a9';
                 this.pointRadius = pointRadius || function (d) {
                     return 4;
                 };
@@ -235,6 +238,14 @@
                     .tickFormat(d3.format(this.yTickFormat))
                     .tickSize(-this.width)
                 );
+
+                this.g.append("text")
+                    .attr("x", (this.width / 2))
+                    .attr("y", this.margin.top + 36)
+                    .attr("text-anchor", "middle")
+                    .text(this.title)
+                    .style('font-size', 32)
+                    .style('fill', this.primaryColor);
             }
 
             addAxisLabels = () => {
@@ -276,7 +287,7 @@
                         .enter()
                         .append("circle")
                         .attr("r", (d) => self.pointRadius(d))
-                        .style("fill", "#61a3a9")
+                        .style("fill", self.primaryColor)
                         .style("opacity", 0.5)
                         .on("mouseover", function (d) {
                             d3.select(this).style('fill', 'red');
@@ -285,7 +296,7 @@
                             self.oneTimeTooltip.write(self.tooltipHtml(d));
                         })
                         .on("mouseout", function (d) {
-                            d3.select(this).style('fill', '#61a3a9');
+                            d3.select(this).style('fill', self.primaryColor);
                             self.oneTimeTooltip.remove();
                         })
                         .on('click', (d) => {
